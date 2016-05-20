@@ -2,9 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c48f838d-10af-464f-84d9-2b23d3c4025e" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/static/app_002.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.jshintrc" afterPath="$PROJECT_DIR$/.jshintrc" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/app.js" afterPath="$PROJECT_DIR$/static/app.js" />
     </list>
     <ignored path="005_RTC.iws" />
@@ -25,14 +22,14 @@
     <favorites_list name="005_RTC" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.11894464">
+    <splitter split-orientation="horizontal" split-proportion="0.2547578">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="socket_io.js" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/socket_io.js">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="81">
-                  <caret line="9" column="0" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
+                <state relative-caret-position="471">
+                  <caret line="35" column="7" selection-start-line="35" selection-start-column="7" selection-end-line="35" selection-end-column="7" />
                   <folding />
                 </state>
               </provider>
@@ -47,18 +44,10 @@
               <file leaf-file-name="app.js" pinned="false" current-in-tab="true">
                 <entry file="file://$PROJECT_DIR$/static/app.js">
                   <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="1080">
-                      <caret line="147" column="0" selection-start-line="147" selection-start-column="0" selection-end-line="147" selection-end-column="0" />
+                    <state relative-caret-position="420">
+                      <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
                       <folding>
                         <element signature="e#49#72#0" expanded="false" />
-                        <element signature="e#771#793#0" expanded="false" />
-                        <element signature="e#800#874#0" expanded="false" />
-                        <element signature="e#3202#3224#0" expanded="false" />
-                        <element signature="e#3238#3376#0" expanded="false" />
-                        <element signature="e#3870#3892#0" expanded="false" />
-                        <element signature="e#3970#3992#0" expanded="false" />
-                        <element signature="e#4352#4393#0" expanded="false" />
-                        <element signature="e#4651#4691#0" expanded="false" />
                       </folding>
                     </state>
                   </provider>
@@ -101,13 +90,9 @@
               <file leaf-file-name="app.js" pinned="false" current-in-tab="true">
                 <entry file="file://$PROJECT_DIR$/static/app.js">
                   <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="765">
-                      <caret line="217" column="24" selection-start-line="217" selection-start-column="24" selection-end-line="217" selection-end-column="24" />
-                      <folding>
-                        <element signature="e#3970#3992#0" expanded="false" />
-                        <element signature="e#4352#4393#0" expanded="false" />
-                        <element signature="e#4651#4691#0" expanded="false" />
-                      </folding>
+                    <state relative-caret-position="780">
+                      <caret line="237" column="9" selection-start-line="237" selection-start-column="9" selection-end-line="237" selection-end-column="9" />
+                      <folding />
                     </state>
                   </provider>
                 </entry>
@@ -145,8 +130,8 @@
         <option value="$PROJECT_DIR$/static/index.html" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/socket_io.js" />
-        <option value="$PROJECT_DIR$/static/app.js" />
         <option value="$PROJECT_DIR$/.jshintrc" />
+        <option value="$PROJECT_DIR$/static/app.js" />
       </list>
     </option>
   </component>
@@ -386,12 +371,12 @@
       <workItem from="1463555641331" duration="30579000" />
       <workItem from="1463707686326" duration="1402000" />
       <workItem from="1463709293848" duration="78000" />
-      <workItem from="1463709611544" duration="4480000" />
+      <workItem from="1463709611544" duration="5214000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="55785000" />
+    <option name="totallyTimeSpent" value="56519000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1440" y="-540" width="2560" height="1440" extended-state="0" />
@@ -403,9 +388,9 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="npm" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21751615" sideWeight="0.49375" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21751615" sideWeight="0.49375" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21751615" sideWeight="0.50625" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21751615" sideWeight="0.50625" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -463,14 +448,6 @@
           <caret line="166" column="0" selection-start-line="166" selection-start-column="0" selection-end-line="166" selection-end-column="0" />
           <folding>
             <element signature="e#49#72#0" expanded="false" />
-            <element signature="e#771#793#0" expanded="false" />
-            <element signature="e#800#874#0" expanded="false" />
-            <element signature="e#3202#3224#0" expanded="false" />
-            <element signature="e#3238#3376#0" expanded="false" />
-            <element signature="e#3870#3892#0" expanded="false" />
-            <element signature="e#3970#3992#0" expanded="false" />
-            <element signature="e#4352#4393#0" expanded="false" />
-            <element signature="e#4651#4691#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -513,14 +490,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#49#72#0" expanded="false" />
-            <element signature="e#771#793#0" expanded="false" />
-            <element signature="e#800#874#0" expanded="false" />
-            <element signature="e#3202#3224#0" expanded="false" />
-            <element signature="e#3238#3376#0" expanded="false" />
-            <element signature="e#3870#3892#0" expanded="false" />
-            <element signature="e#3970#3992#0" expanded="false" />
-            <element signature="e#4352#4393#0" expanded="false" />
-            <element signature="e#4651#4691#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -680,14 +649,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/socket_io.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="81">
-          <caret line="9" column="0" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/static/index_001.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="199">
@@ -714,19 +675,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/static/app.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1080">
-          <caret line="147" column="0" selection-start-line="147" selection-start-column="0" selection-end-line="147" selection-end-column="0" />
+        <state relative-caret-position="420">
+          <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
           <folding>
             <element signature="e#49#72#0" expanded="false" />
-            <element signature="e#771#793#0" expanded="false" />
-            <element signature="e#800#874#0" expanded="false" />
-            <element signature="e#3202#3224#0" expanded="false" />
-            <element signature="e#3238#3376#0" expanded="false" />
-            <element signature="e#3870#3892#0" expanded="false" />
-            <element signature="e#3970#3992#0" expanded="false" />
-            <element signature="e#4352#4393#0" expanded="false" />
-            <element signature="e#4651#4691#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/socket_io.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="471">
+          <caret line="35" column="7" selection-start-line="35" selection-start-column="7" selection-end-line="35" selection-end-column="7" />
+          <folding />
         </state>
       </provider>
     </entry>
