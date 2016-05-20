@@ -6,9 +6,9 @@ window.onload = function () {
         'optional': []
     };
 
-    var stream = null;
-    var pc =     null;
-    var in_out= -1;   // in : -1, ,,, out: 1
+    var stream =  null;
+    var pc =      null;
+    var io_type = undefined;   //发起角色 in 被发起者, out 发起者
 
     var from1 =        document.getElementById('from');
     var to1 =          document.getElementById('to');
@@ -43,9 +43,10 @@ window.onload = function () {
     pc = new RTCPeerConnection(servers, pcConstraints);
     pc.onicecandidate = function (event) {
         console.log('candidate');
+        console.log(event);
         if (event.candidate){
             // 这里其实是相当于发生了一次通信过程.
-            socket.emit('_candidate',{cd: event.candidate, user: user_id});
+            if(io_type === 'out') socket.emit('_candidate',event.candidate);
         }
     };
     pc.onaddstream = function (e) {
@@ -104,7 +105,7 @@ window.onload = function () {
                 return false;
             }
             socket.emit('_accept', user_id);
-            in_out = -1;
+            io_type = 'in';
             buildRTC(user_id);
         });
         socket.on('_refused', function(){
@@ -113,12 +114,14 @@ window.onload = function () {
         });
         socket.on('_accept', function(user_id){
             alert('accepted!!');
-            in_out = 1;
+            io_type = 'out';
             buildRTC(user_id);
         });
 
         socket.on('_candidate', function(candidate){
-            pc.addIceCandidate(new RTCIceCandidate(event.candidate), console.log.bind(console), console.log.bind(console));
+            candidate = new RTCIceCandidate(candidate);
+            console.log(candidate);
+            pc.addIceCandidate(candidate,console.log.bind(console), console.log.bind(console));
         });
 
         function callOut(evt){
@@ -152,14 +155,20 @@ window.onload = function () {
             }).then(function (localStream) {
                 stream = localStream;
                 pc.addStream(localStream);
-                to1.srcObject = localStream;
-                if (in_out === -1) {
+
+                if (io_type === 'out') {
+                    console.log('call_out');
                     pc.createOffer(function (desc) {
+                        console.log(desc)
                         pc.setLocalDescription(desc, function () {
                             socket.emit('_offer', desc);
                         }, function(e){
                             console.log(e);
+                        }, function(e){
+                            console.log(e);
                         });
+                    }, function(e){
+                        console.log(e);
                     });
 
                     socket.on('_answer', function(desc){
@@ -174,7 +183,8 @@ window.onload = function () {
 
                 socket.on('_offer', function (desc) {
                     pc.setRemoteDescription(desc, function () {
-                        if (1 === in_out) {
+                        if ('in' === io_type) {
+                            console.log('call_in');
                             pc.createAnswer(function (desc) {
                                 pc.setLocalDescription(desc, function () {
                                     socket.emit('_answer', desc);

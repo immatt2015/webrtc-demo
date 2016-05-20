@@ -40,7 +40,7 @@ var handle = function (socket){
         if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_answer', candidate);
     });
     socket.on('_candidate', (candidate)=>{
-        console.log('_candidate');
+        console.log('_candidate ' + s_id);
         if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_candidate', candidate);
     });
 
