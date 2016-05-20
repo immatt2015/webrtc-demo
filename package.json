@@ -1,0 +1,22 @@
+{
+  "name": "rtc",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-plugin-syntax-async-functions": "^6.8.0",
+    "babel-plugin-transform-async-to-generator": "^6.8.0",
+    "express": "^4.13.4",
+    "serve-static": "^1.10.2",
+    "socket.io": "^1.4.6",
+    "webrtc-adapter": "^1.1.0"
+  },
+  "devDependencies": {
+    "babel-register": "^6.9.0"
+  },
+  "description": ""
+}

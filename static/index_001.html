@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebRTC</title>
+    <script src="/adapter.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        .video {
+            width: 50%;
+            height: auto;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+        }
+
+        .v1 {
+            float: left;
+        }
+
+        .v2 {
+            float: right;
+        }
+
+        #button {
+            clear: both;
+        }
+
+        #file_transafer {
+            display: block;
+        }
+
+        textarea {
+            resize: none;
+            display:block ;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<h4>音视频</h4>
+<details class="video v1">
+    <summary>From</summary>
+    <div>
+        <video id="from" controls autoplay>from</video>
+    </div>
+</details>
+
+<details class="video v2">
+    <summary>To</summary>
+    <div>
+        <video id="to" autoplay></video>
+    </div>
+</details>
+
+<div id="button">
+    <button id="call">连接</button>
+    <button id="hangup">挂断</button>
+    <label>视频<input type="checkbox" name="video" id="c_video"/></label>
+    <label>音频<input type="checkbox" name="audio" id="c_audio"/></label>
+</div>
+<hr/>
+<h4>文件传输</h4>
+<label id="file_transafer">选择文件: <input type="file" id="file"></label>
+<button id="s_start">开始传输</button>
+<button id="s_stop">停止传输</button>
+
+<textarea disabled cols="50">content</textarea>
+
+</body>
+
+</html>
+
+<script>
+    !function () {
+        var socket = io('http://127.0.0.1:8686');
+
+        var from1 = document.getElementById('from');
+        var to1 = document.getElementById('to');
+        var servers = null;
+        var pcConstraints = {
+            'optional': []
+        };
+        var stream = null;
+        /**
+         * 创建RTCPeerConnection,为创建peers之间的连接做准备.
+         * 同时,注册收集好候选信息之后的调用的回调函数,以及添加stream后的回调函数.
+         */
+        var pc1;
+        pc1 = new RTCPeerConnection(servers, pcConstraints);
+        pc2 = new RTCPeerConnection(servers, pcConstraints);
+        pc1.onicecandidate = function (event) {
+            console.log(event);
+            console.log('icecandidate1');
+            if (event.candidate)
+            // 这里其实是相当于发生了一次通信过程.
+                pc2.addIceCandidate(new RTCIceCandidate(event.candidate),
+                        console.log.bind(console),
+                        console.log.bind(console));
+
+        };
+
+        var pc2;
+        pc2.onicecandidate = function (event) {
+            console.log(event);
+            console.log('icecandidate2');
+            if (event.candidate)
+                pc1.addIceCandidate(new RTCIceCandidate(event.candidate),
+                        console.log.bind(console),
+                        console.log.bind(console));
+
+        };
+        pc2.onaddstream = function (e) {
+            console.log('add stream');
+            from1.srcObject = stream;
+            to1.srcObject = e.stream;
+        };
+
+        /**
+         * 注册媒体连接的响应事件
+         * @type {boolean}
+         */
+        var called = false;
+        document.getElementById('call').onclick = function () {
+            let video = document.getElementById('c_video').checked;
+            let audio = document.getElementById('c_audio').checked;
+
+            if (called) return;
+            called = true;
+            navigator.mediaDevices.getUserMedia({
+                audio: audio,
+                video: video
+            }).then(function (localStream) {
+                stream = localStream;
+                pc1.addStream(localStream);
+
+                pc1.createOffer(function (desc) {
+                    pc1.setLocalDescription(desc, function () {
+                        pc2.setRemoteDescription(desc, function () {
+                            pc2.createAnswer(function (desc) {
+                                pc2.setLocalDescription(desc, function () {
+                                    pc1.setRemoteDescription(desc, function () {
+                                    }, function (e) {
+                                    });
+                                }, function (e) {
+                                });
+                            }, function (e) {
+                            })
+                        }, function (e) {
+                        })
+                    }, function (e) {
+                    })
+                }, function (e) {
+                }, {})
+            }).catch(function (e) {
+                console.log(e);
+            });
+        };
+
+        /**
+         * 注册关闭媒体连接的事件回调
+         * @returns {boolean}
+         */
+        document.getElementById('hangup').onclick = function () {
+            if (!called) return false;
+            if (stream)stream.stop();
+            called = false;
+        };
+
+
+        // >>>>>>>>>>    传输文件 <<<<<<<<<<<<<
+        let data_ended = true;
+        let dc1 = null;
+        let dc2 = null;
+        dc1 = pc1.createDataChannel('file');
+        dc2 = pc2.createDataChannel('file');
+
+        dc1.binaryType = 'arraybuffer';
+        dc2.binaryType = 'arraybuffer';
+
+        document.getElementById('s_start').onclick = function(){
+            if (!data_ended) return false;
+            let file = document.getElementById('file');
+            console.log(file.files[0], 1);
+            dc1.onopen = function (){
+                alert('open');
+                let f_reader = new window.FileReader();
+                f_reader.onload = function (e){
+                    dc1.send(e.target.result);
+                    console.log(e.target.result);
+                };
+                f_reader.readAsArrayBuffer(file.files[0].slice(0));
+            }
+        };
+
+        dc2.onmessage = function(e){
+            console.log(e, 1);
+        }
+
+        document.getElementById('s_stop').onclick = function (){
+            data_ended = true;
+            if(data_ended) return false;
+
+            if(dc) dc1.close();
+        };
+
+    }()
+
+</script>
+
+
