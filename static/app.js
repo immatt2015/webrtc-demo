@@ -1,15 +1,9 @@
 'use strict';
 
 window.onload = function () {
-    var servers = null;
-    var pcConstraints = {
-        'optional': []
-    };
-
-    var stream =  null;
-    var pc =      null;
-    var io_type = undefined;   //发起角色 in 被发起者, out 发起者
-
+    /**
+     * 全局变量
+     */
     var from1 =        document.getElementById('from');
     var to1 =          document.getElementById('to');
     var connect_list = document.getElementById('connectList');
@@ -19,12 +13,28 @@ window.onload = function () {
     var c_video =      document.getElementById('c_video');
     var c_audio =      document.getElementById('c_audio');
 
+    var servers = null;
+    var pcConstraints = {
+        'optional': []
+    };
+
+    var stream =  null;
+    var pc =      null;
+    var io_type = 'out';   //发起角色 in 被发起者, out 发起者
     join.disabled = true;
+    var called = false;
+    /**
+     * end
+     */
+
 
     /**
+     * socket.io 初始化
      * socket.io 建立连接
+     * @type {null}
      */
     var socket = io('http://127.0.0.1:8686');
+    
     socket.on('connect', function(){
         join.disabled = false;
     });
@@ -32,13 +42,83 @@ window.onload = function () {
     socket.on('disconnect', function(){
         join.disabled = true;
     });
+    socket.on('get list', function(list){
+        connect_list.innerHTML = null;
+
+        console.log(list);
+        for(let i=0, l=list.length; i<l; i++){
+            let li = document.createElement('li');
+            var a  = document.createElement('a');
+            a.href='#';
+            a.id = list[i][0];
+            a.innerHTML = list[i][1];
+            li.className = 'user-list';
+            li.appendChild(a);
+            connect_list.appendChild(li);
+            li = null;
+        }
+        let ls = document.getElementsByClassName('user-list');
+        for(let i=0, l=ls.length; i<l; i++){
+            ls[i].onclick = callOut;
+        }
+        console.log(ls);
+
+    });
+    socket.on('_offer', function (desc) {
+        pc.setRemoteDescription(desc, function () {
+            if ('in' === io_type) {
+                console.log('call_in');
+                pc.createAnswer(function (desc) {
+                    pc.setLocalDescription(desc, function () {
+                        socket.emit('_answer', desc);
+                    });
+                }, function(e){
+                    console.log(e);
+                })
+            }
+        }, function (e) {
+            console.log(e);
+        });
+    });
+    socket.on('_answer', function(desc){
+        pc.setRemoteDescription(desc, function () {
+
+        }, function(e){
+            console.log(e);
+        });
+    socket.on('_call_in', function(user_id){
+        if(!confirm('接受 ' + user_id + ' 的连接')) {
+            socket.emit('_refused', user_id);
+            return false;
+        }
+        socket.emit('_accept', user_id);
+        io_type = 'in';
+        buildRTC(user_id);
+    });
+    socket.on('_refused', function(){
+        alert('杯具了(＞﹏＜)');
+        return false;
+    });
+    socket.on('_accept', function(user_id){
+        alert('accepted!!');
+        io_type = 'out';
+        buildRTC(user_id);
+    });
+
+    socket.on('_candidate', function(candidate){
+        candidate = new RTCIceCandidate(candidate);
+        console.log(candidate);
+        pc.addIceCandidate(candidate,console.log.bind(console), console.log.bind(console));
+    });
     /**
      * end
      */
-
+        
     /**
+     * rtc初始化
      * 创建RTCPeerConnection,为创建peers之间的连接做准备.
      * 同时,注册收集好候选信息之后的调用的回调函数,以及添加stream后的回调函数.
+     * @type {null}
      */
     pc = new RTCPeerConnection(servers, pcConstraints);
     pc.onicecandidate = function (event) {
@@ -55,6 +135,29 @@ window.onload = function () {
         from1.srcObject = stream;
         to1.srcObject = e.stream;
     };
+    /**
+     * end
+     */
+
+        /**
+         * 方法
+         */
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /**
+     */
+
     /**
      * end
      */
@@ -76,53 +179,8 @@ window.onload = function () {
          */
         socket.emit('join', name);  // 提交登录名
         console.log('connect');
-        socket.on('get list', function(list){
-            connect_list.innerHTML = null;
 
-            console.log(list);
-            for(let i=0, l=list.length; i<l; i++){
-                let li = document.createElement('li');
-                var a  = document.createElement('a');
-                a.href='#';
-                a.id = list[i][0];
-                a.innerHTML = list[i][1];
-                li.className = 'user-list';
-                li.appendChild(a);
-                connect_list.appendChild(li);
-                li = null;
-            }
-            let ls = document.getElementsByClassName('user-list');
-            for(let i=0, l=ls.length; i<l; i++){
-                ls[i].onclick = callOut;
-            }
-            console.log(ls);
 
-        });
-
-        socket.on('_call_in', function(user_id){
-            if(!confirm('接受 ' + user_id + ' 的连接')) {
-                socket.emit('_refused', user_id);
-                return false;
-            }
-            socket.emit('_accept', user_id);
-            io_type = 'in';
-            buildRTC(user_id);
-        });
-        socket.on('_refused', function(){
-            alert('杯具了(＞﹏＜)');
-            return false;
-        });
-        socket.on('_accept', function(user_id){
-            alert('accepted!!');
-            io_type = 'out';
-            buildRTC(user_id);
-        });
-
-        socket.on('_candidate', function(candidate){
-            candidate = new RTCIceCandidate(candidate);
-            console.log(candidate);
-            pc.addIceCandidate(candidate,console.log.bind(console), console.log.bind(console));
-        });
 
         function callOut(evt){
             console.log(evt.target.id);
@@ -138,7 +196,6 @@ window.onload = function () {
      * 注册媒体连接的响应事件
      * @type {boolean}
      */
-    var called = false;
     function buildRTC(){
         call_in.onclick = function () {
             let video = c_video.checked;
@@ -171,32 +228,11 @@ window.onload = function () {
                         console.log(e);
                     });
 
-                    socket.on('_answer', function(desc){
-                        pc.setRemoteDescription(desc, function () {
 
-                        }, function(e){
-                            console.log(e);
-                        });
-                    })
 
                 }
 
-                socket.on('_offer', function (desc) {
-                    pc.setRemoteDescription(desc, function () {
-                        if ('in' === io_type) {
-                            console.log('call_in');
-                            pc.createAnswer(function (desc) {
-                                pc.setLocalDescription(desc, function () {
-                                    socket.emit('_answer', desc);
-                                });
-                            }, function(e){
-                                console.log(e);
-                            })
-                        }
-                    }, function (e) {
-                        console.log(e);
-                    });
-                });
+
             });
         };
 
