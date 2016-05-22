@@ -45,7 +45,7 @@ window.onload = function () {
      * socket.io 建立连接
      * @type {null}
      */
-    var socket = io();
+    var socket = io('http://127.0.0.1:8686');
 
     socket.on('connect', function () {   // socket 连接建立, 连接按钮不可用
         join.disabled = false;
@@ -77,27 +77,27 @@ window.onload = function () {
     });
 
     socket.on('_offer', function (desc) {             // 接收方 处理处理发起方提交offer事件
-        log()(' _offer', desc);
-        if (!desc) return false;
-
+        console.log('==  _offer', desc);
+        if(!desc) return false;
         _setRemoteDescription(desc)
-            .then(function () {
+            .then(() => {
                 return _createAnswer();
             })
-            .then(function (desc) {
+            .then((desc) => {
                 return _setLocalDescription(desc);
             })
-            .then(function (desc) {
-                log()(' emit _answer');
+            .then((desc) => {
                 socket.emit('_answer', desc);
+                console.log('>> _setRemoteDescription ' + io_type);
             })
-            .catch(function (e) {
+            .catch((e) => {
                 console.log(e);
             })
     });
     socket.on('_answer', function (desc) {              // 发起方 处理接收方接受offer后的answer事件
-        pc.setRemoteDescription(desc, function () {
-            log()('setRemoteDescription');
+        pc.setRemoteDescription(desc, function (d) {
+            console.log(d);
+            console.log('==  _answer');
         }, function (e) {
             console.log(e);
         });
@@ -106,26 +106,20 @@ window.onload = function () {
     socket.on('_call_in', function (user_id) {            // 接收方 处理发起方的发起请求
         if (!confirm('接受 ' + user_id + ' 的连接')) {
             socket.emit('_refused', user_id);
-            log()(' emit _refused');
             return false;
         }
         io_type = 'in';
         console.log('==  _call_in ' + io_type);
 
-        socket.emit('_accept', user_id);
-        log()(' emit _accpet');
-
-        console.log(c_video.checked, c_audio.checked);
         createMedia(c_video.checked, c_audio.checked)
-            .then(function (stream) {
+            .then((stream) => {
                 addStream(stream);
             })
-            .then(function () {
-                return Offer();
-            })
-            .catch(function (e) {
+            .catch((e) => {
                 console.log(e);
             });
+
+        socket.emit('_accept', user_id);
     });
     socket.on('_refused', function () {                // 发起方 处理接收方的拒绝事件
         console.log('杯具了(＞﹏＜)');
@@ -137,25 +131,22 @@ window.onload = function () {
         console.log('==  _accept, ' + io_type);
         console.log(c_video.checked, c_audio.checked);
         createMedia(c_video.checked, c_audio.checked)
-            .then(function (stream) {
+            .then((stream) => {
                 addStream(stream);
+                return Offer();
             })
-            .catch(function (e) {
+            .catch((e) => {
                 console.log(e);
             });
     });
 
     socket.on('_candidate', function (candidate) {       // 双方 处理candidate候选信息  
-        log()('addIceCandidate before');
-        console.log('@@@@@@', candidate);
-        var cand = new window.RTCIceCandidate(candidate);
-        console.log(2, cand);
-        // console.log('==  _candidate ' + io_type + JSON.stringify(candidate));
+        candidate = new RTCIceCandidate(candidate);
+        console.log('==  _candidate ' + io_type + JSON.stringify(candidate));
         console.log(candidate);
-        pc.addIceCandidate(cand).then(function (d) {
-            log()('addIceCandidate');
-            // console.log('=== addIceCandidate');
-            // console.log(d);
+        pc.addIceCandidate(candidate).then(function (d) {
+            console.log('=== addIceCandidate');
+            console.log(d);
         }, function (e) {
             console.log(e);
         });
@@ -164,16 +155,14 @@ window.onload = function () {
         * 方法
         */
     function callOut(evt) {
-        // console.log(evt.target.id);
+        console.log(evt.target.id);
         var user_id = evt.target.id;
         socket.emit('_call_out', user_id);
-        log()('emit _call_out');
     }
 
     function buildSocket(name) {
         socket.emit('join', name);  // 提交登录名
-        log()(' emit _join');
-        // console.log('connect');
+        console.log('connect');
     };
     /**
         * end
@@ -191,20 +180,20 @@ window.onload = function () {
      */
     pc = new window.RTCPeerConnection(servers, pcConstraints);
     pc.onicecandidate = function (event) {
-        console.log('@@@@@@@@@@@@@@ ', new Date() % 100000, event);
-        log()('onicecandidate');
+        console.log('>>  on_candidate ' + io_type);
+        console.log(event.candidate);
         if (event.candidate) {
-            socket.emit('_candidate', event.candidate);
-            log()('emit _candidate', event.candidate);
+            // if (io_type === 'out') {
+                socket.emit('_candidate', event.candidate);
+                console.log('emit candidate');
+            // }
         }
     };
     pc.onaddstream = function (e) {
-        // console.log('add stream');
-        // console.log(e);
-        log()('onaddstream', e.stream);
-        // from1.srcObject = stream;
+        console.log('add stream');
+        console.log(e);
+        from1.srcObject = stream;
         to1.srcObject = e.stream;
-
     };
 
 
@@ -212,49 +201,57 @@ window.onload = function () {
      * 方法
      */
     function _createOffer() {                       // rtc 创建offer
-        return pc.createOffer()
-            .then(function (desc) {
-                log()('createOffer', desc);
-                return desc;
+        return new Promise((res, rej) => {
+            pc.createOffer(function (desc) {
+                console.log('>>  _createOffer');
+                console.log(desc);
+                return res(desc);
+            }, (e) => {
+                console.log(e);
+                return rej(e);
             });
+        });
     }
     function _setLocalDescription(desc) {
-        return pc.setLocalDescription(desc)
-            .then(function () {   // 这里会触发pc.oncandidate 事件
-                log()('setLocalDescription');
-                return desc;
+        return new Promise((res, rej) => {
+            pc.setLocalDescription(desc, function (d) {   // 这里会触发pc.oncandidate 事件
+                console.log('>>  _setLocalDescription');
+                console.log(d);
+                return res(d);
+            }, function (e) {
+                console.log(e);
+                return rej(e);
             });
+        });
     }
-    function _setRemoteDescription(des) {
-        log()('setRemoteDescription before ');
-        var desc;
-        try {
-            // desc = new RTCIceCandidate((des));
-            desc = new RTCSessionDescription((des));
-        } catch (e) {
-            console.log(e);
-            console.log(des);
-            console.log(desc);
-            return e;
-        }
-        return pc.setRemoteDescription(desc)
-            .then(function () {
-                log()('setRemoteDescription');
-                return desc;
+    function _setRemoteDescription(desc) {
+        return new Promise((res, rej) => {
+            desc = new window.RTCIceCandidate(desc);
+            pc.setRemoteDescription(desc, function (d) {
+                console.log('>>  _setRemoteDescription')
+                console.log(d);
+                return res(d);
+            }, function (e) {
+                console.log(e);
+                return rej(e);
             });
+        });
     }
     function _createAnswer() {
-        return pc.createAnswer()
-            .then(function (desc) {
-                log()('createAnswer');
-                return desc;
+        return new Promise((res, rej) => {
+            pc.createAnswer(function (desc) {
+                console.log('>>  _createAnswer');
+                console.log(desc);
+                return res(desc);
+            }, function (e) {
+                console.log(e);
+                return rej(e);
             });
+        });
     }
     function addStream(localStream) {
-        // console.log('>>  _addstream');
-        return pc.addStream(localStream,function () {
-            log()('addStream');
-        });
+        console.log('>>  _addstream');
+        pc.addStream(localStream);
     }
     /**
      * end
@@ -282,25 +279,17 @@ window.onload = function () {
         buildSocket(username);
     };
     var Offer = function () {
-        return _createOffer()     // createOffer 过程
-            .then(function (desc) {
-                return _setLocalDescription(desc);
+        _createOffer()     // createOffer 过程
+            .then((desc) => {
+                return _setLocalDescription(desc);   
             })
             .then(function (desc) {
-                console.log(desc);
                 socket.emit('_offer', desc);
-                log()('emit _offer');
             });
     };
     /**
      * end
      */
-    function log() {
-        let symbol;
-        if ('in' === io_type) symbol = '>> ';
-        if ('out' === io_type) symbol = '<< ';
 
-        return console.log.bind(console, symbol);
-    }
 
 };

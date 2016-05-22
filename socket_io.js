@@ -35,18 +35,18 @@ var handle = function (socket){
 
     });
 
-    socket.on('_answer', (candidate)=>{
+    socket.on('_answer', (d)=>{
         console.log('_answer');
-        if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_answer', candidate);
+        if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_answer', d);
     });
-    socket.on('_candidate', (candidate)=>{
-        console.log('_candidate ' + s_id);
-        if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_candidate', candidate);
+    socket.on('_candidate', (d)=>{
+        console.log('_candidate ' + s_id + ' ' + JSON.stringify(d));
+        if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_candidate', d);
     });
 
-    socket.on('_offer', (candidate)=>{
-        console.log('_offer');
-        if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_offer', candidate);
+    socket.on('_offer', (d)=>{
+        console.log('_offer', d);
+        if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_offer', d);
     });
 
     socket.on('_call_out', (data)=>{

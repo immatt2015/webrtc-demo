@@ -11,65 +11,65 @@
             width: 50%;
             height: auto;
         }
-
+        
         video {
             width: 100%;
             height: auto;
         }
-
+        
         .v1 {
             float: left;
         }
-
+        
         .v2 {
             float: right;
         }
-
+        
         #button {
             clear: both;
         }
-
+        
         #file_transafer {
             display: block;
         }
-
+        
         textarea {
             resize: none;
-            display:block ;
+            display: block;
             margin-top: 10px;
         }
     </style>
 </head>
 
 <body>
-<h4>音视频</h4>
-<details class="video v1">
-    <summary>From</summary>
-    <div>
-        <video id="from" controls autoplay>from</video>
+    <h4>音视频</h4>
+    <details class="video v1">
+        <summary>From</summary>
+        <div>
+            <video id="from" controls autoplay>from</video>
+        </div>
+    </details>
+
+    <details class="video v2">
+        <summary>To</summary>
+        <div>
+            <video id="to" autoplay></video>
+        </div>
+    </details>
+
+    <div id="button">
+        <button id="call">连接</button>
+        <button id="hangup">挂断</button>
+        <label>视频<input type="checkbox" name="video" id="c_video"/></label>
+        <label>音频<input type="checkbox" name="audio" id="c_audio"/></label>
     </div>
-</details>
+    <hr/>
+    <h4>文件传输</h4>
+    <label id="file_transafer">选择文件: <input type="file" id="file"></label>
+    <button id="s_start">开始传输</button>
+    <button id="s_stop">停止传输</button>
 
-<details class="video v2">
-    <summary>To</summary>
-    <div>
-        <video id="to" autoplay></video>
-    </div>
-</details>
-
-<div id="button">
-    <button id="call">连接</button>
-    <button id="hangup">挂断</button>
-    <label>视频<input type="checkbox" name="video" id="c_video"/></label>
-    <label>音频<input type="checkbox" name="audio" id="c_audio"/></label>
-</div>
-<hr/>
-<h4>文件传输</h4>
-<label id="file_transafer">选择文件: <input type="file" id="file"></label>
-<button id="s_start">开始传输</button>
-<button id="s_stop">停止传输</button>
-
-<textarea disabled cols="50">content</textarea>
+    <textarea disabled cols="50">content</textarea>
 
 </body>
 
@@ -94,29 +94,32 @@
         pc1 = new RTCPeerConnection(servers, pcConstraints);
         pc2 = new RTCPeerConnection(servers, pcConstraints);
         pc1.onicecandidate = function (event) {
+            console.log('<< onicecandidate1');
             console.log(event);
-            console.log('icecandidate1');
             if (event.candidate)
-            // 这里其实是相当于发生了一次通信过程.
+                // 这里其实是相当于发生了一次通信过程.
                 pc2.addIceCandidate(new RTCIceCandidate(event.candidate),
-                        console.log.bind(console),
+                        console.log.bind(console, '>> addicecandidate2', event.candidate),
                         console.log.bind(console));
 
         };
+        pc1.onaddstream = function (e) {
+            from1.srcObject = e.stream;
+                    console.log('< on add stream');
+                };
 
         var pc2;
         pc2.onicecandidate = function (event) {
-            console.log(event);
-            console.log('icecandidate2');
+            console.log('>> onicecandidate2');
+            console.log(event);            
             if (event.candidate)
                 pc1.addIceCandidate(new RTCIceCandidate(event.candidate),
-                        console.log.bind(console),
+                        console.log.bind(console, '<< addicecandidate1', event.candidate),
                         console.log.bind(console));
 
         };
         pc2.onaddstream = function (e) {
-            console.log('add stream');
-            from1.srcObject = stream;
+            console.log('>> on add stream');
             to1.srcObject = e.stream;
         };
 
@@ -137,13 +140,20 @@
             }).then(function (localStream) {
                 stream = localStream;
                 pc1.addStream(localStream);
-
+                pc2.addStream(localStream);
+                console.log('<< add stream');
                 pc1.createOffer(function (desc) {
+                    console.log('<< createOffer')
                     pc1.setLocalDescription(desc, function () {
+                        console.log('<< setLocalDescription')
                         pc2.setRemoteDescription(desc, function () {
+                            console.log('>> setRemoteDescription')
                             pc2.createAnswer(function (desc) {
+                                console.log('>> createAnswer')
                                 pc2.setLocalDescription(desc, function () {
+                                    console.log('>> setLocalDescription')
                                     pc1.setRemoteDescription(desc, function () {
+                                        console.log('<< setRemoteDescription')
                                     }, function (e) {
                                     });
                                 }, function (e) {
@@ -211,5 +221,3 @@
     }()
 
 </script>
-
-
