@@ -201,8 +201,8 @@ window.onload = function () {
     pc.onaddstream = function (e) {
         // console.log('add stream');
         // console.log(e);
-        log()('onaddstream', e.stream);
-        // from1.srcObject = stream;
+        log()('onaddstream**&&&&&&', e.stream);
+        from1.srcObject = stream;
         to1.srcObject = e.stream;
 
     };
@@ -252,6 +252,7 @@ window.onload = function () {
     }
     function addStream(localStream) {
         // console.log('>>  _addstream');
+        stream = localStream;
         return pc.addStream(localStream,function () {
             log()('addStream');
         });
