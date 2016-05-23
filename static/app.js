@@ -13,7 +13,11 @@ window.onload = function () {
     var c_video = document.getElementById('c_video');
     var c_audio = document.getElementById('c_audio');
 
-    var servers = null;
+    var servers = {
+        'iceServers': [{
+            'url': 'stun:stun.example.org'
+        }]
+    };
     var pcConstraints = {
         'optional': []
     };
@@ -253,7 +257,7 @@ window.onload = function () {
     function addStream(localStream) {
         // console.log('>>  _addstream');
         stream = localStream;
-        return pc.addStream(localStream,function () {
+        return pc.addStream(localStream, function () {
             log()('addStream');
         });
     }
