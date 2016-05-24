@@ -32,14 +32,15 @@ window.onload = function () {
      */
 
     /**
-    * media
-    */
+     * media
+     */
     function createMedia(video, audio) {      //创建媒体信息
         return navigator.mediaDevices.getUserMedia({
             audio: audio,
             video: video
         });
     }
+    
     /**
      * end
      */
@@ -165,8 +166,8 @@ window.onload = function () {
         });
     });
     /**
-        * 方法
-        */
+     * 方法
+     */
     function callOut(evt) {
         // console.log(evt.target.id);
         var user_id = evt.target.id;
@@ -180,8 +181,8 @@ window.onload = function () {
         // console.log('connect');
     };
     /**
-        * end
-        */
+     * end
+     */
 
     /**
      * end
@@ -222,6 +223,7 @@ window.onload = function () {
                 return desc;
             });
     }
+
     function _setLocalDescription(desc) {
         return pc.setLocalDescription(desc)
             .then(function () {   // 这里会触发pc.oncandidate 事件
@@ -229,6 +231,7 @@ window.onload = function () {
                 return desc;
             });
     }
+
     function _setRemoteDescription(des) {
         log()('setRemoteDescription before ');
         var desc;
@@ -247,6 +250,7 @@ window.onload = function () {
                 return desc;
             });
     }
+
     function _createAnswer() {
         return pc.createAnswer()
             .then(function (desc) {
@@ -254,6 +258,7 @@ window.onload = function () {
                 return desc;
             });
     }
+
     function addStream(localStream) {
         // console.log('>>  _addstream');
         stream = localStream;
@@ -261,6 +266,7 @@ window.onload = function () {
             log()('addStream');
         });
     }
+
     /**
      * end
      */
@@ -269,7 +275,7 @@ window.onload = function () {
      */
 
 
-    /** 
+    /**
      * 点击动作
      */
     join.onclick = function () {
@@ -297,6 +303,7 @@ window.onload = function () {
                 log()('emit _offer');
             });
     };
+
     /**
      * end
      */
