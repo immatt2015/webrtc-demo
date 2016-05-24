@@ -34,7 +34,7 @@ var handle = function (socket){
         if(rtc_ls[s_id]) return false;
 
     });
-
+  
     socket.on('_answer', (d)=>{
         console.log('_answer');
         if(rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('_answer', d);

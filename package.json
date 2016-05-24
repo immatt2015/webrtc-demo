@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app/index"
   },
   "author": "",
   "license": "ISC",
@@ -18,5 +19,5 @@
   "devDependencies": {
     "babel-register": "^6.9.0"
   },
-  "description": ""
+  "description": "webrtc demo"
 }

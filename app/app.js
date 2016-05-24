@@ -2,16 +2,17 @@ var http = require('http');
 var express = require('express');
 var serverStatic = require('serve-static');
 var socketIO = require('socket.io');
+var path = require('path');
 var IO  = require('./socket_io');
 
 var app = express();
 var server = http.Server(app);
 var io = socketIO(server);
 
-app.use(serverStatic('static', {index: ['index.html']}));
+app.use(serverStatic(path.join(__dirname, '..', 'static'), {index: ['index.html']}));
 
 app.get('/index', function(req, res){
-    res.redirect('/static')
+    res.redirect('/static');
 });
 
 IO.use(io);
