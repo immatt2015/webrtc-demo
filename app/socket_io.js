@@ -64,6 +64,18 @@ var handle = function (socket){
     socket.on('_refused', (data)=>{
        if(rtc_ls[data])  rtc_ls[data][1].emit('_refused', s_id);
     });
+    
+    socket.on('_file', (filename)=>{
+        console.log('filename', filename);
+        rtc_ls[rtc_ls[s_id][2]][1].emit('_file',filename);
+    });
+    socket.on('_refused_file', ()=>{
+        rtc_ls[rtc_ls[s_id][2]][1].emit('_refused_file');
+    });
+    socket.on('_accept_file', ()=>{
+        console.log('accept file');
+        rtc_ls[rtc_ls[s_id][2]][1].emit('_accept_file');
+    });
 };
 
 exports.use =socketIO;

@@ -12,6 +12,9 @@ window.onload = function () {
     var call_in = document.getElementById('call');
     var c_video = document.getElementById('c_video');
     var c_audio = document.getElementById('c_audio');
+    var file_input = document.getElementById('file');
+    var send_file = document.getElementById('s_start');
+    var datachannel = null;
 
     var servers = {
         'iceServers': [{
@@ -40,7 +43,7 @@ window.onload = function () {
             video: video
         });
     }
-    
+
     /**
      * end
      */
@@ -165,6 +168,23 @@ window.onload = function () {
             console.log(e);
         });
     });
+
+    socket.on('_file', function (evt) {
+        if (!confirm('接受文件')) socket.emit('_refused_file');
+
+        function cb() {
+            socket.emit('_accept_file');
+        }
+
+        transferFiles(cb);
+    });
+    socket.on('_refused_file', function (evt) {
+        alert('拒绝接受文件');
+    });
+    socket.on('_accept_file', function () {
+        log()('accept files');
+        transferFiles(_sendFile);
+    });
     /**
      * 方法
      */
@@ -180,6 +200,59 @@ window.onload = function () {
         log()(' emit _join');
         // console.log('connect');
     };
+
+    function transferFiles(cb) {
+        var dc = pc.createDataChannel('dc');
+        dc.binaryType = 'arraybuffer';
+
+        log()('data channel');
+        log()('file');
+        setInterval(function () {
+            log()('status ' + dc.readyState);
+        }, 100);
+        dc.onmessage = function (evt) {
+            console.log(evt);
+        };
+
+        dc.onopen = function (evt) {
+            log()('open channel');
+            console.log(evt);
+            cb(datachannel);
+        };
+
+        dc.onerror = function (e) {
+            console.log(e);
+        }
+
+        dc.onclose = function (evt) {
+            console.log(evt);
+        };
+    };
+
+    function sendFile(filename) {
+        log()('send file');
+        socket.emit('_file', filename);
+    }
+    function _sendFile(dc) {
+        var file = file_input.files[0];
+        log()('status ', dc.readyState)
+        var chuncksize = 1024;
+        var filesize = file.size;
+        var offset = 0;
+        function send(e) {
+            dc.send(e.target.result);
+        }
+        for (; ;) {
+            let reader = new FileReader();
+            reader.onload = send;
+
+            let slice = file.slice(offset, offset + chuncksize);
+            reader.readAsArrayBuffer(slice);
+
+            offset = offset + chuncksize;
+            if (offset > filesize) break;
+        }
+    }
     /**
      * end
      */
@@ -211,7 +284,10 @@ window.onload = function () {
         to1.srcObject = e.stream;
 
     };
-
+    pc.ondatachannel = function (e) {
+        datachannel = e.datachannel;
+        console.log(e, '&&&&&&&&&&**************%%%%%%%%%%%%%%%%%%%');
+    };
 
     /**
      * 方法
@@ -276,7 +352,7 @@ window.onload = function () {
 
 
     /**
-     * 点击动作
+     * Method
      */
     join.onclick = function () {
         join.disabled = true;
@@ -290,8 +366,13 @@ window.onload = function () {
             console.log('socket not built!  wait');
             return;
         }
+
+        c_audio.disabled = false;
+        c_video.disabled = false;
+
         buildSocket(username);
     };
+
     var Offer = function () {
         return _createOffer()     // createOffer 过程
             .then(function (desc) {
@@ -302,6 +383,10 @@ window.onload = function () {
                 socket.emit('_offer', desc);
                 log()('emit _offer');
             });
+    };
+
+    send_file.onclick = function () {
+        sendFile(file_input.files[0].name);
     };
 
     /**
