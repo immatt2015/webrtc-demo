@@ -312,11 +312,9 @@ window.onload = function () {
         log()('setRemoteDescription before ');
         var desc;
         try {
-            // desc = new RTCIceCandidate((des));
             desc = new RTCSessionDescription((des));
         } catch (e) {
             console.log(e);
-            console.log(des);
             console.log(desc);
             return e;
         }
