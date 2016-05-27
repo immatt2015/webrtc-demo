@@ -45,10 +45,6 @@ window.onload = function () {
     }
 
     /**
-     * end
-     */
-
-    /**
      * socket.io 初始化
      * socket.io 建立连接
      * @type {null}
@@ -189,7 +185,7 @@ window.onload = function () {
         socket.emit('join', name);  // 提交登录名
         log()(' emit _join');
         // console.log('connect');
-    };
+    }
 
     function transferFiles(cb) {
         var dc = pc.createDataChannel('dc');
@@ -212,12 +208,12 @@ window.onload = function () {
 
         dc.onerror = function (e) {
             console.log(e);
-        }
+        };
 
         dc.onclose = function (evt) {
             console.log(evt);
         };
-    };
+    }
 
     function sendFile(filename) {
         log()('send file');
@@ -276,17 +272,19 @@ window.onload = function () {
     };
 
     /**
-     * 方法
+     * rtc相关方法
      */
-    function _setLocalDescription(desc) {
-        return pc.setLocalDescription(desc)
-            .then(function () {   // 这里会触发pc.oncandidate 事件
-                log()('setLocalDescription');
-                return desc;
-            });
+
+    function addStream(localStream) {
+        stream = localStream;
+        return pc.addStream(localStream, function () {
+            log()('addStream');
+        });
     }
 
-    function _setRemoteDescription(des) {
+
+
+    function setRemoteDescription(des) {
         return new Promise((res, rej)=> {
             var desc;
             try {
@@ -305,13 +303,6 @@ window.onload = function () {
             });
     }
 
-    function addStream(localStream) {
-        stream = localStream;
-        return pc.addStream(localStream, function () {
-            log()('addStream');
-        });
-    }
-
     var createOffer = function () {
         return pc.createOffer()      // createOffer 过程
             .then(function (desc) {
@@ -319,7 +310,10 @@ window.onload = function () {
                 return desc;
             })
             .then(function (desc) {
-                return _setLocalDescription(desc);
+                return pc.setLocalDescription(desc)
+                    .then(()=> {
+                        return desc;
+                    });
             })
             .then((desc)=> {
                 log()('set local description');
@@ -333,7 +327,7 @@ window.onload = function () {
     };
 
     var createAnswer = function (desc) {
-        return _setRemoteDescription(desc)
+        return setRemoteDescription(desc)
             .then(function () {
                 return pc.createAnswer();
             })
@@ -342,7 +336,10 @@ window.onload = function () {
                 return desc;
             })
             .then(function (desc) {
-                return _setLocalDescription(desc);
+                return pc.setLocalDescription(desc)
+                    .then(()=> {
+                        return desc;
+                    });
             })
             .then((desc)=> {
                 log()('set local description');
