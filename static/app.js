@@ -129,7 +129,7 @@ window.onload = function () {
                 addStream(stream);
             })
             .then(function () {
-                return Offer();
+                return createOffer__();
             })
             .catch(function (e) {
                 console.log(e);
@@ -235,7 +235,7 @@ window.onload = function () {
     }
     function _sendFile(dc) {
         var file = file_input.files[0];
-        log()('status ', dc.readyState)
+        log()('status ', dc.readyState);
         var chuncksize = 1024;
         var filesize = file.size;
         var offset = 0;
@@ -253,13 +253,6 @@ window.onload = function () {
             if (offset > filesize) break;
         }
     }
-    /**
-     * end
-     */
-
-    /**
-     * end
-     */
 
     /**
      * rtc初始化
@@ -340,17 +333,22 @@ window.onload = function () {
             log()('addStream');
         });
     }
+    var createOffer__ = function () {
+        return _createOffer()     // createOffer 过程
+            .then(function (desc) {
+                return _setLocalDescription(desc);
+            })
+            .then(function (desc) {
+                console.log(desc);
+                socket.emit('_offer', desc);
+                log()('emit _offer');
+            });
+    };
+
+
 
     /**
-     * end
-     */
-    /**
-     * end
-     */
-
-
-    /**
-     * Method
+     * 点击事件绑定
      */
     join.onclick = function () {
         join.disabled = true;
@@ -371,24 +369,12 @@ window.onload = function () {
         buildSocket(username);
     };
 
-    var Offer = function () {
-        return _createOffer()     // createOffer 过程
-            .then(function (desc) {
-                return _setLocalDescription(desc);
-            })
-            .then(function (desc) {
-                console.log(desc);
-                socket.emit('_offer', desc);
-                log()('emit _offer');
-            });
-    };
-
     send_file.onclick = function () {
         sendFile(file_input.files[0].name);
     };
 
     /**
-     * end
+     * 自定义日志记录
      */
     function log() {
         let symbol;
