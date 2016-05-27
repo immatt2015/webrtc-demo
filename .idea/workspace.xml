@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="c48f838d-10af-464f-84d9-2b23d3c4025e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/app.js" afterPath="$PROJECT_DIR$/static/app.js" />
     </list>
     <ignored path="005_RTC.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -38,8 +36,8 @@
       <file leaf-file-name="app.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/static/app.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="996">
-              <caret line="365" column="1" selection-start-line="365" selection-start-column="1" selection-end-line="365" selection-end-column="1" />
+            <state relative-caret-position="282">
+              <caret line="226" column="7" selection-start-line="226" selection-start-column="7" selection-end-line="226" selection-end-column="7" />
               <folding>
                 <element signature="e#1047#1121#0" expanded="false" />
                 <element signature="e#1152#1216#0" expanded="false" />
@@ -78,8 +76,8 @@
       <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="13" selection-start-line="0" selection-start-column="13" selection-end-line="0" selection-end-column="13" />
+            <state relative-caret-position="60">
+              <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -419,12 +417,12 @@
       <workItem from="1463993985308" duration="189000" />
       <workItem from="1463994177621" duration="1279000" />
       <workItem from="1464052855154" duration="985000" />
-      <workItem from="1464313998274" duration="12727000" />
+      <workItem from="1464313998274" duration="12768000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="81595000" />
+    <option name="totallyTimeSpent" value="81636000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1440" y="-540" width="2560" height="1440" extended-state="0" />
@@ -843,8 +841,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/static/app.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="996">
-          <caret line="365" column="1" selection-start-line="365" selection-start-column="1" selection-end-line="365" selection-end-column="1" />
+        <state relative-caret-position="282">
+          <caret line="226" column="7" selection-start-line="226" selection-start-column="7" selection-end-line="226" selection-end-column="7" />
           <folding>
             <element signature="e#1047#1121#0" expanded="false" />
             <element signature="e#1152#1216#0" expanded="false" />
@@ -881,8 +879,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="13" selection-start-line="0" selection-start-column="13" selection-end-line="0" selection-end-column="13" />
+        <state relative-caret-position="60">
+          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
           <folding />
         </state>
       </provider>
