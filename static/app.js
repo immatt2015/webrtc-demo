@@ -88,17 +88,7 @@ window.onload = function () {
         log()(' _offer', desc);
         if (!desc) return false;
 
-        _setRemoteDescription(desc)
-            .then(function () {
-                return _createAnswer();
-            })
-            .then(function (desc) {
-                return _setLocalDescription(desc);
-            })
-            .then(function (desc) {
-                log()(' emit _answer');
-                socket.emit('_answer', desc);
-            })
+        return createAnswer(desc)
             .catch(function (e) {
                 console.log(e);
             })
@@ -129,7 +119,7 @@ window.onload = function () {
                 addStream(stream);
             })
             .then(function () {
-                return createOffer__();
+                return createOffer();
             })
             .catch(function (e) {
                 console.log(e);
@@ -233,15 +223,18 @@ window.onload = function () {
         log()('send file');
         socket.emit('_file', filename);
     }
+
     function _sendFile(dc) {
         var file = file_input.files[0];
         log()('status ', dc.readyState);
         var chuncksize = 1024;
         var filesize = file.size;
         var offset = 0;
+
         function send(e) {
             dc.send(e.target.result);
         }
+
         for (; ;) {
             let reader = new FileReader();
             reader.onload = send;
@@ -285,14 +278,6 @@ window.onload = function () {
     /**
      * 方法
      */
-    function _createOffer() {                       // rtc 创建offer
-        return pc.createOffer()
-            .then(function (desc) {
-                log()('createOffer', desc);
-                return desc;
-            });
-    }
-
     function _setLocalDescription(desc) {
         return pc.setLocalDescription(desc)
             .then(function () {   // 这里会触发pc.oncandidate 事件
@@ -302,41 +287,43 @@ window.onload = function () {
     }
 
     function _setRemoteDescription(des) {
-        log()('setRemoteDescription before ');
-        var desc;
-        try {
-            desc = new RTCSessionDescription((des));
-        } catch (e) {
-            console.log(e);
-            console.log(desc);
-            return e;
-        }
-        return pc.setRemoteDescription(desc)
+        return new Promise((res, rej)=> {
+            var desc;
+            try {
+                let desc = new RTCSessionDescription((des));
+                return res(des);
+            } catch (e) {
+                return rej(e);
+            }
+        })
+            .then((desc)=> {
+                pc.setRemoteDescription(desc)
+            })
             .then(function () {
-                log()('setRemoteDescription');
-                return desc;
-            });
-    }
-
-    function _createAnswer() {
-        return pc.createAnswer()
-            .then(function (desc) {
-                log()('createAnswer');
-                return desc;
+                log()('set remote description');
+                return;
             });
     }
 
     function addStream(localStream) {
-        // console.log('>>  _addstream');
         stream = localStream;
         return pc.addStream(localStream, function () {
             log()('addStream');
         });
     }
-    var createOffer__ = function () {
-        return _createOffer()     // createOffer 过程
+
+    var createOffer = function () {
+        return pc.createOffer()      // createOffer 过程
+            .then(function (desc) {
+                log()('create offer');
+                return desc;
+            })
             .then(function (desc) {
                 return _setLocalDescription(desc);
+            })
+            .then((desc)=> {
+                log()('set local description');
+                return desc;
             })
             .then(function (desc) {
                 console.log(desc);
@@ -345,7 +332,27 @@ window.onload = function () {
             });
     };
 
-
+    var createAnswer = function (desc) {
+        return _setRemoteDescription(desc)
+            .then(function () {
+                return pc.createAnswer();
+            })
+            .then(function (desc) {
+                log()('create answer');
+                return desc;
+            })
+            .then(function (desc) {
+                return _setLocalDescription(desc);
+            })
+            .then((desc)=> {
+                log()('set local description');
+                return desc;
+            })
+            .then(function (desc) {
+                log()(' emit _answer');
+                socket.emit('_answer', desc);
+            });
+    };
 
     /**
      * 点击事件绑定
@@ -384,4 +391,5 @@ window.onload = function () {
         return console.log.bind(console, symbol);
     }
 
-};
+}
+;
