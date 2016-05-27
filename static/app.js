@@ -39,14 +39,14 @@ window.onload = function () {
      * socket.io 建立连接
      * @type {null}
      */
-    socket.on('connect', function () {   // socket 连接建立, 连接按钮不可用
+    socket.on('connect', ()=> {   // socket 连接建立, 连接按钮不可用
         join.disabled = false;
     });
 
-    socket.on('disconnect', function () {    // socket 断开连接, 连接按钮恢复可用
+    socket.on('disconnect', ()=> {    // socket 断开连接, 连接按钮恢复可用
         join.disabled = true;
     });
-    socket.on('get list', function (list) {  // 服务器推送在线名单, 更新联系人列表
+    socket.on('get list', (list)=> {  // 服务器推送在线名单, 更新联系人列表
         connect_list.innerHTML = null;
         for (let i = 0, l = list.length; i < l; i++) {
             let li = document.createElement('li');
@@ -65,7 +65,7 @@ window.onload = function () {
         }
     });
 
-    socket.on('_offer', function (desc) {             // 接收方 处理处理发起方提交offer事件
+    socket.on('_offer', (desc)=> {             // 接收方 处理处理发起方提交offer事件
         log()(' _offer', desc);
         if (!desc) return false;
 
@@ -74,15 +74,16 @@ window.onload = function () {
                 console.log(e);
             })
     });
-    socket.on('_answer', function (desc) {              // 发起方 处理接收方接受offer后的answer事件
-        pc.setRemoteDescription(desc, function () {
-            log()('set remote description');
-        }, function (e) {
+    socket.on('_answer', (desc)=> {              // 发起方 处理接收方接受offer后的answer事件
+        pc.setRemoteDescription(desc)
+            .then(()=> {
+                log()('set remote description');
+            }).catch((e)=> {
             console.log(e);
         });
     });
 
-    socket.on('_call_in', function (user_id) {            // 接收方 处理发起方的发起请求
+    socket.on('_call_in', (user_id)=> {            // 接收方 处理发起方的发起请求
         if (!confirm('接受 ' + user_id + ' 的连接')) {
             socket.emit('_refused', user_id);
             log()(' emit _refused');
@@ -96,40 +97,38 @@ window.onload = function () {
 
         console.log(c_video.checked, c_audio.checked);
         return registerMedia(c_video.checked, c_audio.checked)
-            .then(function () {
+            .then(()=> {
                 return createOffer();
             })
-            .catch(function (e) {
+            .catch((e)=> {
                 console.log(e);
             });
     });
-    socket.on('_refused', function () {                // 发起方 处理接收方的拒绝事件
+    socket.on('_refused', ()=> {                // 发起方 处理接收方的拒绝事件
         console.log('杯具了(＞﹏＜)');
         console.log('==  _refused');
         return false;
     });
-    socket.on('_accept', function (user_id) {          // 发起方 处理接收方同意事件  
+    socket.on('_accept', (user_id)=> {          // 发起方 处理接收方同意事件
         ioType = 'out';
         console.log('==  _accept, ' + ioType);
         console.log(c_video.checked, c_audio.checked);
         return registerMedia(c_video.checked, c_audio.checked)
-            .catch(function (e) {
+            .catch((e)=> {
                 console.log(e);
             });
     });
 
-    socket.on('_candidate', function (candidate) {       // 双方 处理candidate候选信息
+    socket.on('_candidate', (candidate)=> {       // 双方 处理candidate候选信息
         var cand = new window.RTCIceCandidate(candidate);
-        pc.addIceCandidate(cand).then(function (d) {
+        pc.addIceCandidate(cand).then((d)=> {
             log()('addIceCandidate');
-            // console.log('=== addIceCandidate');
-            // console.log(d);
-        }, function (e) {
+        }).catch((e)=> {
             console.log(e);
         });
     });
 
-    socket.on('_file', function (evt) {
+    socket.on('_file', (evt)=> {
         if (!confirm('接受文件')) socket.emit('_refused_file');
 
         function cb() {
@@ -138,10 +137,10 @@ window.onload = function () {
 
         transferFiles(cb);
     });
-    socket.on('_refused_file', function (evt) {
+    socket.on('_refused_file', (evt)=> {
         alert('拒绝接受文件');
     });
-    socket.on('_accept_file', function () {
+    socket.on('_accept_file', ()=> {
         log()('accept files');
         transferFiles(_sendFile);
     });
@@ -172,7 +171,7 @@ window.onload = function () {
             dataChannel = dc;
 
             log()('data channel');
-            setInterval(function () {
+            setInterval(()=> {
                 log()('status ' + dc.readyState);
             }, 1000);
 
@@ -273,7 +272,7 @@ window.onload = function () {
         let desc = new RTCSessionDescription((des));
 
         return pc.setRemoteDescription(desc)
-            .then(function () {
+            .then(()=> {
                 log()('set remote description');
                 return;
             });
@@ -281,7 +280,7 @@ window.onload = function () {
 
     var createOffer = function () {
         return pc.createOffer()      // createOffer 过程
-            .then(function (desc) {
+            .then((desc)=> {
                 log()('create offer');
                 return desc;
             })
@@ -295,7 +294,7 @@ window.onload = function () {
                 log()('set local description');
                 return desc;
             })
-            .then(function (desc) {
+            .then((desc)=> {
                 console.log(desc);
                 socket.emit('_offer', desc);
                 log()('emit _offer');
@@ -304,14 +303,14 @@ window.onload = function () {
 
     var createAnswer = function (desc) {
         return setRemoteDescription(desc)
-            .then(function () {
+            .then(()=> {
                 return pc.createAnswer();
             })
-            .then(function (desc) {
+            .then((desc)=> {
                 log()('create answer');
                 return desc;
             })
-            .then(function (desc) {
+            .then((desc)=> {
                 return pc.setLocalDescription(desc)
                     .then(()=> {
                         return desc;
@@ -321,7 +320,7 @@ window.onload = function () {
                 log()('set local description');
                 return desc;
             })
-            .then(function (desc) {
+            .then((desc)=> {
                 log()(' emit _answer');
                 socket.emit('_answer', desc);
             });
@@ -364,5 +363,4 @@ window.onload = function () {
         return console.log.bind(console, symbol);
     }
 
-}
-;
+};
