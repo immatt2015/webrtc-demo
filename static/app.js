@@ -262,7 +262,7 @@ window.onload = function () {
             });
     }
 
-    function registerMedia(video, audio){
+    function registerMedia(video, audio) {
         return Promise.all([
             addMediaStream(video, audio),
             // transferFiles()
@@ -270,18 +270,9 @@ window.onload = function () {
     }
 
     function setRemoteDescription(des) {
-        return new Promise((res, rej)=> {
-            var desc;
-            try {
-                let desc = new RTCSessionDescription((des));
-                return res(des);
-            } catch (e) {
-                return rej(e);
-            }
-        })
-            .then((desc)=> {
-                pc.setRemoteDescription(desc)
-            })
+        let desc = new RTCSessionDescription((des));
+
+        return pc.setRemoteDescription(desc)
             .then(function () {
                 log()('set remote description');
                 return;
