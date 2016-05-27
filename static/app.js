@@ -26,31 +26,19 @@ window.onload = function () {
     };
 
     var stream = null;
-    var pc = null;
-    var io_type = undefined;   //发起角色 in 被发起者, out 发起者
-    join.disabled = true;
+    var ioType = undefined;   //发起角色 in 被发起者, out 发起者
     var called = false;
-    /**
-     * end
-     */
+    var dataChannel = null;
+    join.disabled = true;
 
-    /**
-     * media
-     */
-    function createMedia(video, audio) {      //创建媒体信息
-        return navigator.mediaDevices.getUserMedia({
-            audio: audio,
-            video: video
-        });
-    }
+    var pc = new window.RTCPeerConnection(servers, pcConstraints);
+    var socket = io();
 
     /**
      * socket.io 初始化
      * socket.io 建立连接
      * @type {null}
      */
-    var socket = io();
-
     socket.on('connect', function () {   // socket 连接建立, 连接按钮不可用
         join.disabled = false;
     });
@@ -60,8 +48,6 @@ window.onload = function () {
     });
     socket.on('get list', function (list) {  // 服务器推送在线名单, 更新联系人列表
         connect_list.innerHTML = null;
-
-        console.log(list);
         for (let i = 0, l = list.length; i < l; i++) {
             let li = document.createElement('li');
             var a = document.createElement('a');
@@ -77,7 +63,6 @@ window.onload = function () {
         for (let i = 0, l = ls.length; i < l; i++) {
             ls[i].onclick = callOut;
         }
-        console.log(ls);
     });
 
     socket.on('_offer', function (desc) {             // 接收方 处理处理发起方提交offer事件
@@ -91,7 +76,7 @@ window.onload = function () {
     });
     socket.on('_answer', function (desc) {              // 发起方 处理接收方接受offer后的answer事件
         pc.setRemoteDescription(desc, function () {
-            log()('setRemoteDescription');
+            log()('set remote description');
         }, function (e) {
             console.log(e);
         });
@@ -103,17 +88,14 @@ window.onload = function () {
             log()(' emit _refused');
             return false;
         }
-        io_type = 'in';
-        console.log('==  _call_in ' + io_type);
+        ioType = 'in';
+        console.log('==  _call_in ' + ioType);
 
         socket.emit('_accept', user_id);
         log()(' emit _accpet');
 
         console.log(c_video.checked, c_audio.checked);
-        createMedia(c_video.checked, c_audio.checked)
-            .then(function (stream) {
-                addStream(stream);
-            })
+        return registerMedia(c_video.checked, c_audio.checked)
             .then(function () {
                 return createOffer();
             })
@@ -127,25 +109,17 @@ window.onload = function () {
         return false;
     });
     socket.on('_accept', function (user_id) {          // 发起方 处理接收方同意事件  
-        io_type = 'out';
-        console.log('==  _accept, ' + io_type);
+        ioType = 'out';
+        console.log('==  _accept, ' + ioType);
         console.log(c_video.checked, c_audio.checked);
-        createMedia(c_video.checked, c_audio.checked)
-            .then(function (stream) {
-                addStream(stream);
-            })
+        return registerMedia(c_video.checked, c_audio.checked)
             .catch(function (e) {
                 console.log(e);
             });
     });
 
-    socket.on('_candidate', function (candidate) {       // 双方 处理candidate候选信息  
-        log()('addIceCandidate before');
-        console.log('@@@@@@', candidate);
+    socket.on('_candidate', function (candidate) {       // 双方 处理candidate候选信息
         var cand = new window.RTCIceCandidate(candidate);
-        console.log(2, cand);
-        // console.log('==  _candidate ' + io_type + JSON.stringify(candidate));
-        console.log(candidate);
         pc.addIceCandidate(cand).then(function (d) {
             log()('addIceCandidate');
             // console.log('=== addIceCandidate');
@@ -171,11 +145,11 @@ window.onload = function () {
         log()('accept files');
         transferFiles(_sendFile);
     });
+
     /**
-     * 方法
+     *  socket 方法封装
      */
     function callOut(evt) {
-        // console.log(evt.target.id);
         var user_id = evt.target.id;
         socket.emit('_call_out', user_id);
         log()('emit _call_out');
@@ -184,35 +158,43 @@ window.onload = function () {
     function buildSocket(name) {
         socket.emit('join', name);  // 提交登录名
         log()(' emit _join');
-        // console.log('connect');
     }
 
+    /**
+     * 发送/接收文件相关
+     * @param cb
+     */
     function transferFiles(cb) {
-        var dc = pc.createDataChannel('dc');
-        dc.binaryType = 'arraybuffer';
+        return new Promise((res)=> {
+            var dc = pc.createDataChannel('dc');
+            dc.binaryType = 'arraybuffer';
 
-        log()('data channel');
-        log()('file');
-        setInterval(function () {
-            log()('status ' + dc.readyState);
-        }, 100);
-        dc.onmessage = function (evt) {
-            console.log(evt);
-        };
+            dataChannel = dc;
 
-        dc.onopen = function (evt) {
-            log()('open channel');
-            console.log(evt);
-            cb(datachannel);
-        };
+            log()('data channel');
+            setInterval(function () {
+                log()('status ' + dc.readyState);
+            }, 1000);
 
-        dc.onerror = function (e) {
-            console.log(e);
-        };
+            dc.onmessage = function (evt) {
+                console.log(evt);
+            };
 
-        dc.onclose = function (evt) {
-            console.log(evt);
-        };
+            dc.onopen = function (evt) {
+                log()('open channel');
+                console.log(evt);
+                cb(datachannel);
+            };
+
+            dc.onerror = function (e) {
+                console.log(e);
+            };
+
+            dc.onclose = function (evt) {
+                console.log(evt);
+            };
+            return res(dc);
+        });
     }
 
     function sendFile(filename) {
@@ -249,40 +231,43 @@ window.onload = function () {
      * 同时,注册收集好候选信息之后的调用的回调函数,以及添加stream后的回调函数.
      * @type {null}
      */
-    pc = new window.RTCPeerConnection(servers, pcConstraints);
     pc.onicecandidate = function (event) {
-        console.log('@@@@@@@@@@@@@@ ', new Date() % 100000, event);
-        log()('onicecandidate');
+        log()('on ice candidate');
         if (event.candidate) {
             socket.emit('_candidate', event.candidate);
-            log()('emit _candidate', event.candidate);
+            log()('emit _candidate');
         }
     };
     pc.onaddstream = function (e) {
-        // console.log('add stream');
-        // console.log(e);
-        log()('onaddstream**&&&&&&', e.stream);
-        from1.srcObject = stream;
+        log()('on add stream');
+        // from1.srcObject = stream;
         to1.srcObject = e.stream;
-
     };
     pc.ondatachannel = function (e) {
         datachannel = e.datachannel;
-        console.log(e, '&&&&&&&&&&**************%%%%%%%%%%%%%%%%%%%');
+        log()('on data channel');
     };
 
     /**
      * rtc相关方法
      */
-
-    function addStream(localStream) {
-        stream = localStream;
-        return pc.addStream(localStream, function () {
-            log()('addStream');
-        });
+    function addMediaStream(video, audio) {
+        return navigator.mediaDevices.getUserMedia({
+            audio: audio,
+            video: video
+        })
+            .then((localStream)=> {
+                stream = localStream;
+                pc.addStream(localStream);
+            });
     }
 
-
+    function registerMedia(video, audio){
+        return Promise.all([
+            addMediaStream(video, audio),
+            // transferFiles()
+        ]);
+    }
 
     function setRemoteDescription(des) {
         return new Promise((res, rej)=> {
@@ -382,8 +367,8 @@ window.onload = function () {
      */
     function log() {
         let symbol;
-        if ('in' === io_type) symbol = '>> ';
-        if ('out' === io_type) symbol = '<< ';
+        if ('in' === ioType) symbol = '>> ';
+        if ('out' === ioType) symbol = '<< ';
 
         return console.log.bind(console, symbol);
     }
