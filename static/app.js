@@ -161,13 +161,34 @@ window.onload = function () {
     }
 
     /**
+     *  发送消息
+     */
+    function sendMsg() {
+        return new Promise((res, rej)=>{
+            var dc = pc.createDataChannel('msg');
+
+            log()('msg channel');
+
+            dc.onerror = function (e) {
+                console.log(e, 'on_error');
+            };
+
+            dc.onclose = function (evt) {
+                console.log(evt, 'on_close');
+            };
+
+            // dc.send()
+            return res(dc);
+        })
+    }
+    /**
      * 发送/接收文件相关
      * @param cb
      */
     function transferFiles(cb) {
         return new Promise((res)=> {
             var dc = pc.createDataChannel('dc');
-            dc.binaryType = 'arraybuffer';
+            // dc.binaryType = 'arraybuffer';
 
             dataChannel = dc;
 
@@ -176,22 +197,19 @@ window.onload = function () {
                 log()('status ' + dc.readyState);
             }, 1000);
 
-            dc.onmessage = function (evt) {
-                console.log(evt);
-            };
-
             dc.onopen = function (evt) {
-                log()('open channel');
-                console.log(evt);
+                log()('on_openchannel');
+                console.log(evt, ioType, ' <<<<)))))))))))))((((((((((())))))))))');
                 // cb(datachannel);
+                dc.send('hi world' + ioType);
             };
 
             dc.onerror = function (e) {
-                console.log(e);
+                console.log(e, 'on_error');
             };
 
             dc.onclose = function (evt) {
-                console.log(evt);
+                console.log(evt, 'on_close');
             };
             return res(dc);
         });
@@ -244,8 +262,23 @@ window.onload = function () {
         to1.srcObject = e.stream;
     };
     pc.ondatachannel = function (e) {
-        datachannel = e.datachannel;
-        log()('on data channel');
+        console.log(e);
+        var dc = e.channel;
+        log()('on_data_channel');
+        dc.onmessage = function (evt) {
+            log()('on_msg');
+            console.log(evt)
+            console.log(evt.data, ioType, '>>>>*((((((((((())))))))))))');
+        };
+
+        dc.onerror = function (e) {
+            console.log(e, 'on_error');
+        };
+
+        dc.onclose = function (evt) {
+            console.log(evt, 'on_close');
+        };
+
     };
 
     /**
@@ -263,14 +296,16 @@ window.onload = function () {
     }
 
     function registerMedia(video, audio) {
-        return transferFiles()
-            .then(()=>{
-                return addMediaStream(video, audio)
-            });
-        // return Promise.all([
-            // addMediaStream(video, audio),
-            // transferFiles()
-        // ]);
+
+    //     return addMediaStream(video, audio)
+    //         .then(()=>{
+    //             return transferFiles()
+    //         });
+        return Promise.all([
+            addMediaStream(video, audio),
+            transferFiles(),
+            sendMsg()
+        ]);
     }
 
     function setRemoteDescription(des) {
