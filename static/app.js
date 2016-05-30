@@ -181,7 +181,7 @@ window.onload = function () {
             dc.onopen = function (evt) {
                 log()('open channel');
                 console.log(evt);
-                cb(datachannel);
+                // cb(datachannel);
             };
 
             dc.onerror = function (e) {
@@ -261,10 +261,14 @@ window.onload = function () {
     }
 
     function registerMedia(video, audio) {
-        return Promise.all([
+        return transferFiles()
+            .then(()=>{
+                return addMediaStream(video, audio)
+            });
+        // return Promise.all([
             // addMediaStream(video, audio),
-            transferFiles()
-        ]);
+            // transferFiles()
+        // ]);
     }
 
     function setRemoteDescription(des) {
