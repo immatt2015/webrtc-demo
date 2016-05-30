@@ -18,7 +18,9 @@ window.onload = function () {
 
     var servers = {
         'iceServers': [{
-            'url': 'stun.fwdnet.net'
+            'url': 'stun:stun.fwdnet.net'
+        },{
+            'url': 'stun:stun.example.org'
         }]
     };
     var pcConstraints = {
