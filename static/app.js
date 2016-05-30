@@ -149,8 +149,7 @@ window.onload = function () {
      *  socket 方法封装
      */
     function callOut(evt) {
-        var user_id = evt.target.id;
-        socket.emit('_call_out', user_id);
+        socket.emit('_call_out', evt.target.id);
         log()('emit _call_out');
     }
 
@@ -263,8 +262,8 @@ window.onload = function () {
 
     function registerMedia(video, audio) {
         return Promise.all([
-            addMediaStream(video, audio),
-            // transferFiles()
+            // addMediaStream(video, audio),
+            transferFiles()
         ]);
     }
 
