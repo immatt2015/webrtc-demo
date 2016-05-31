@@ -1,25 +1,36 @@
 'use strict';
 
 window.onload = function () {
+    var username = undefined;
+    do {
+        username = prompt('输入昵称');
+    } while (username !== null && username.trim().length < 1);
+    if (!username) {
+        alert('取消通信');
+        return false;
+    }
+
+    var pc = new window.RTCPeerConnection(servers, pcConstraints);
+    var socket = io();
+
+    socket.emit('join', username);
+    document.querySelector('span#my-name').innerText = username;
+
     /**
      * 全局变量
      */
-    var from1 = document.getElementById('from');
-    var to1 = document.getElementById('to');
-    var connect_list = document.getElementById('connectList');
-    var join = document.getElementById('join');
-    var user_name = document.getElementById('userName');
-    var call_in = document.getElementById('call');
-    var c_video = document.getElementById('c_video');
-    var c_audio = document.getElementById('c_audio');
-    var file_input = document.getElementById('file');
-    var send_file = document.getElementById('s_start');
+    var v_local = document.getElementById('c_video_local');
+    var v_remote = document.getElementById('c_video_remote');
+    var c_list = document.getElementById('c_list');
+    var c_video = document.getElementById('s-video');
+    var c_audio = document.getElementById('s-audio');
+    var s_media = document.getElementById('stop-media');
     var datachannel = null;
 
     var servers = {
         'iceServers': [{
             'url': 'stun:stun.fwdnet.net'
-        },{
+        }, {
             'url': 'stun:stun.example.org'
         }]
     };
@@ -31,10 +42,6 @@ window.onload = function () {
     var ioType = undefined;   //发起角色 in 被发起者, out 发起者
     var called = false;
     var dataChannel = null;
-    join.disabled = true;
-
-    var pc = new window.RTCPeerConnection(servers, pcConstraints);
-    var socket = io();
 
     /**
      * socket.io 初始化
@@ -42,14 +49,18 @@ window.onload = function () {
      * @type {null}
      */
     socket.on('connect', ()=> {   // socket 连接建立, 连接按钮不可用
-        join.disabled = false;
+        c_video.disabled = false;
+        c_audio.disabled = false;
+        s_media.disabled = false;
     });
 
     socket.on('disconnect', ()=> {    // socket 断开连接, 连接按钮恢复可用
-        join.disabled = true;
+        c_video.disabled = false;
+        c_audio.disabled = false;
+        s_media.disabled = false;
     });
-    socket.on('get list', (list)=> {  // 服务器推送在线名单, 更新联系人列表
-        connect_list.innerHTML = null;
+    socket.on('list', (list)=> {  // 服务器推送在线名单, 更新联系人列表
+        c_list.innerHTML = null;
         for (let i = 0, l = list.length; i < l; i++) {
             let li = document.createElement('li');
             var a = document.createElement('a');
@@ -58,7 +69,7 @@ window.onload = function () {
             a.innerHTML = list[i][1];
             li.className = 'user-list';
             li.appendChild(a);
-            connect_list.appendChild(li);
+            c_list.appendChild(li);
             li = null;
         }
         let ls = document.getElementsByClassName('user-list');
@@ -155,16 +166,11 @@ window.onload = function () {
         log()('emit _call_out');
     }
 
-    function buildSocket(name) {
-        socket.emit('join', name);  // 提交登录名
-        log()(' emit _join');
-    }
-
     /**
      *  发送消息
      */
-    function sendMsg() {
-        return new Promise((res, rej)=>{
+    function sendMsg(msg) {
+        return new Promise((res, rej)=> {
             var dc = pc.createDataChannel('msg');
 
             log()('msg channel');
@@ -177,31 +183,53 @@ window.onload = function () {
                 console.log(evt, 'on_close');
             };
 
+            dc.onopen = function (evt) {
+                log()('on_openchannel');
+                document.querySelector('form#text-form input.sender').onclick = function (e) {
+                    var content = document.querySelector('form#text-form input.form-input').value;
+                    var msg = {username: username, content: content};
+                    dc.send(JSON.stringify(msg));
+                    var t = document.createTextNode('<< 自己 : ' + msg.content);
+                    var p = document.createElement('p');
+                    p.appendChild(t);
+
+                    document.querySelector('div#msg-list').appendChild(p);
+                }
+
+                // addMediaStream({audio: true, video: true}).then((d)=>{
+                //     console.log(d);
+                // })
+                //     .catch((e)=>{
+                //         console.log(e);
+                //     })
+            };
+
             // dc.send()
             return res(dc);
         })
     }
+
     /**
      * 发送/接收文件相关
      * @param cb
      */
     function transferFiles(cb) {
         return new Promise((res)=> {
-            var dc = pc.createDataChannel('dc');
+            var dc = pc.createDataChannel('file');
             // dc.binaryType = 'arraybuffer';
 
             dataChannel = dc;
 
             log()('data channel');
-            setInterval(()=> {
-                log()('status ' + dc.readyState);
-            }, 1000);
+            // setInterval(()=> {
+            //     log()('status ' + dc.readyState);
+            // }, 1000);
 
             dc.onopen = function (evt) {
                 log()('on_openchannel');
                 console.log(evt, ioType, ' <<<<)))))))))))))((((((((((())))))))))');
-                // cb(datachannel);
-                dc.send('hi world' + ioType);
+                // // cb(datachannel);
+                // dc.send('hi world' + ioType);
             };
 
             dc.onerror = function (e) {
@@ -257,9 +285,10 @@ window.onload = function () {
         }
     };
     pc.onaddstream = function (e) {
+        console.log(e);
         log()('on add stream');
-        // from1.srcObject = stream;
-        to1.srcObject = e.stream;
+        v_local.srcObject = stream;
+        v_remote.srcObject = e.stream;
     };
     pc.ondatachannel = function (e) {
         console.log(e);
@@ -267,8 +296,16 @@ window.onload = function () {
         log()('on_data_channel');
         dc.onmessage = function (evt) {
             log()('on_msg');
-            console.log(evt)
-            console.log(evt.data, ioType, '>>>>*((((((((((())))))))))))');
+            console.log(evt);
+            if (typeof evt.data === 'string') {
+                console.log(evt.data);
+                var msg = JSON.parse(evt.data);
+                var t = document.createTextNode('>> ' +msg.username + ': ' + msg.content);
+                var p = document.createElement('p');
+                p.appendChild(t);
+
+                document.querySelector('div#msg-list').appendChild(p);
+            }
         };
 
         dc.onerror = function (e) {
@@ -291,21 +328,39 @@ window.onload = function () {
         })
             .then((localStream)=> {
                 stream = localStream;
-                pc.addStream(localStream);
+                pc.addStream(localStream, console.log, console.log);
+                log()('addstream');
             });
     }
 
-    function registerMedia(video, audio) {
+    function addMedia() {
+        return new Promise((res, rej)=> {
+            try {
+                // var media = new mediaStream();
+                var media = null;
+                return res(media);
+            } catch (e) {
+                console.log(e);
+                return rej(e);
+            }
+        });
+    }
 
-    //     return addMediaStream(video, audio)
-    //         .then(()=>{
-    //             return transferFiles()
-    //         });
-        return Promise.all([
-            addMediaStream(video, audio),
-            transferFiles(),
-            sendMsg()
-        ]);
+    function registerMedia(video, audio) {
+        return Promise.resolve({})
+            .then((m)=> {
+                m.media = addMediaStream({video: true, audio: true});
+                // m.media = addMedia();
+                return m;
+            })
+            .then((m)=> {
+                m.file = transferFiles();
+                return m;
+            })
+            .then((m)=> {
+                m.msg = sendMsg();
+                return m;
+            });
     }
 
     function setRemoteDescription(des) {
@@ -367,32 +422,6 @@ window.onload = function () {
     };
 
     /**
-     * 点击事件绑定
-     */
-    join.onclick = function () {
-        join.disabled = true;
-        var username = encodeURI((user_name.value || '').trim());
-
-        if (!username) {
-            console.log('no found username');
-            return;
-        }
-        if (!socket) {
-            console.log('socket not built!  wait');
-            return;
-        }
-
-        c_audio.disabled = false;
-        c_video.disabled = false;
-
-        buildSocket(username);
-    };
-
-    send_file.onclick = function () {
-        sendFile(file_input.files[0].name);
-    };
-
-    /**
      * 自定义日志记录
      */
     function log() {
@@ -402,5 +431,4 @@ window.onload = function () {
 
         return console.log.bind(console, symbol);
     }
-
 };

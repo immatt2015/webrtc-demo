@@ -25,13 +25,14 @@ var handle = function (socket){
         let ls = Object.keys(rtc_ls);
         let name_ls = [];
         for(let i=0,l=ls.length; i<l; i++){
-            if(socket.id !== ls[i] && rtc_ls[ls[i]][0])
+            // if(socket.id !== ls[i] && rtc_ls[ls[i]][0])
             name_ls.push([ls[i], rtc_ls[ls[i]][0]]);
         }
         console.log('>>', name_ls);
-        socket.emit('get list', name_ls);
+        socket.broadcast.emit('list', name_ls);
+        socket.emit('list', name_ls);
 
-        if(rtc_ls[s_id]) return false;
+        // if(rtc_ls[s_id]) return false;
 
     });
   

@@ -1,97 +1,119 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <meta charset="UTF-8">
-    <title>WebRTC</title>
-    <script src="/adapter.js"></script>
+    <title>RTC</title>
+    <meta charset="utf-8">
+    <meta cache-contrl="no-cache">
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        .video {
-            width: 40%;
-            height: auto;
+        body {
+            width: 80%;
+            margin: auto;
+
+            display: -webkit-flex;
+            display: -moz-flex;
+            display: -o-flex;
+            display: -ms-flex;
+            display: flex;
         }
 
-        video {
+        #aside {
+            margin-top: 1rem;
+            padding-left: 1rem;
+            padding-top: -1rem;
+            width: 10rem;
+            border-left: .5px lightgray solid;
+        }
+
+        #article {
+            flex: 1;
+        }
+
+        #c_media {
+            margin: auto;
+            user-select: none;
+        }
+
+        #c_video_remote {
             width: 100%;
-            height: auto;
-        }
-
-        .v1 {
+            height: 100%;
             float: left;
         }
 
-        .v2 {
-            float: left;
-        }
-
-        #button {
+        #c_video_local {
             clear: both;
-        }
 
-        #file_transafer {
-            display: block;
-        }
-
-        textarea {
-            resize: none;
-            display:block ;
-            margin-top: 10px;
-        }
-        #connectorList {
+            width: 20%;
             float: right;
-            width: 18%;
+            margin-top: -16%;
+            margin-right: 1%;
         }
 
+        #c_media input {
+        }
+
+        #my-name {
+            color: dimgray;
+        }
+
+        #msg-list {
+            height: 10rem;
+            overflow: scroll;
+        }
     </style>
 </head>
-
 <body>
-<h4>音视频</h4>
-<details class="video v1">
-    <summary>From</summary>
-    <div>
-        <video id="from" controls autoplay>from</video>
-    </div>
-</details>
-
-<details class="video v2">
-    <summary>To</summary>
-    <div>
-        <video id="to" autoplay></video>
-    </div>
-</details>
-
-<div id="connectorList">
-    <div>
-        <input type="text" id="userName">
-        <input type="submit" id="join" value="加入"/>
-    </div>
-    <ul id="connectList">
-        <li>Connector</li>
-    </ul>
-</div>
-
-
-<div id="button">
-    <label>视频<input type="checkbox" name="video" id="c_video"  disabled/></label>
-    <label>音频<input type="checkbox" name="audio" id="c_audio"  checked disabled/></label>
-</div>
-
-<h4>文件传输</h4>
-<label id="file_transafer">选择文件: <input type="file" id="file"></label>
-<button id="s_start">开始传输</button>
-<button id="s_stop">停止传输</button>
-
-<textarea disabled cols="50">content</textarea>
-
-<hr/>
 <noscript>
-    不支持Js......
+    当前浏览器不支持JS!
 </noscript>
+<header>
+</header>
+<article id="article">
+    <section>
+        <h4>视频</h4>
+        <div id="c_media">
+            <video id="c_video_remote" alt="对方视频" autoplay></video>
+            <video id="c_video_local" alt="本地影像" autoplay></video>
+        </div>
+        <form>
+            <input type="button" value="start视频" name="start_video" disabled id="s-video">
+            <input type="button" value="start音频" name="start_audio" disabled id="s-audio">
+            <input type="button" value="停止活动" name="stop_audio" disabled id="stop-media">
+        </form>
+    </section>
+    <section>
+        <h4>文件传输</h4>
+        <form id="file-form">
+            <input type="file" id="file" class="form-input" required/>
+            <input type="button" value="传输" class="sender"/>
+        </form>
+    </section>
+    <section>
+        <h4>文本传输</h4>
+        <form id="text-form" action="#">
+            <input type="text" placeholder="输入消息" required class="form-input"/>
+            <input type="button" value="发送信息" class="sender">
+        </form>
+        <div id="msg">
+            <p>消息列表</p>
+            <div id="msg-list">
+
+            </div>
+        </div>
+    </section>
+</article>
+<aside id="aside">
+    <section>
+        <p >我的名字: <span id="my-name"></span> </p>
+    </section>
+    <section>
+        <h4>在线:</h4>
+        <ul id="c_list">
+        </ul>
+    </section>
+</aside>
+<div style="clear: both;"></div>
 </body>
-
 </html>
-
-<script src="app.js" charset="utf-8"> </script>
-
+<script src="adapter.js"></script>
+<script src="app.js"></script>
