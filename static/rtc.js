@@ -1,228 +1,156 @@
-/**
- * Created by Inter on 16/5/30.
- */
-
-/**
- * rtc配置
- * @type {{iceServers: *[]}}
- */
-var servers = {
-    'iceServers': [{
-        'url': 'stun:stun.fwdnet.net'
-    }, {
-        'url': 'stun:stun.example.org'
-    }]
-};
-var pcConstraints = {
-    'optional': []
-};
-
-var pc = new window.RTCPeerConnection(servers, pcConstraints);
-
-/**
- * rtc初始化
- * 创建RTCPeerConnection,为创建peers之间的连接做准备.
- * 同时,注册收集好候选信息之后的调用的回调函数,以及添加stream后的回调函数.
- * @type {null}
- */
-pc.onicecandidate = function (event) {
-    log()('on ice candidate');
-    if (event.candidate) {
-        socket.emit('_candidate', event.candidate);
-        log()('emit _candidate');
-    }
-};
-pc.onaddstream = function (e) {
-    log()('on add stream');
-    media_local.srcObject = stream;
-    media_remote.srcObject = e.stream;
-};
-pc.ondatachannel = function (e) {
-    console.log(e);
-    var dc = e.channel;
-    log()('on_data_channel');
-    dc.onmessage = function (evt) {
-        log()('on_msg');
-        console.log(evt);
-        console.log(evt.data, ioType, '>>>>*((((((((((())))))))))))');
-    };
-
-    dc.onerror = function (e) {
-        console.log(e, 'on_error');
-    };
-
-    dc.onclose = function (evt) {
-        console.log(evt, 'on_close');
-    };
-
-};
-
-/**
- * rtc相关方法
- */
-function addMediaStream(video, audio) {
-    return navigator.mediaDevices.getUserMedia({
-        audio: audio,
-        video: video
-    })
-        .then((localStream)=> {
-            stream = localStream;
-            pc.addStream(localStream);
-        });
-}
-
-function registerMedia(video, audio) {
-
-    //     return addMediaStream(video, audio)
-    //         .then(()=>{
-    //             return transferFiles()
-    //         });
-    return Promise.all([
-        addMediaStream(video, audio),
-        transferFiles(),
-        sendMsg()
-    ]);
-}
-
-function setRemoteDescription(des) {
-    let desc = new RTCSessionDescription((des));
-
-    return pc.setRemoteDescription(desc)
-        .then(()=> {
-            log()('set remote description');
-            return;
-        });
-}
-
-var createOffer = function () {
-    return pc.createOffer()      // createOffer 过程
-        .then((desc)=> {
-            log()('create offer');
-            return desc;
-        })
-        .then(function (desc) {
-            return pc.setLocalDescription(desc)
-                .then(()=> {
-                    return desc;
-                });
-        })
-        .then((desc)=> {
-            log()('set local description');
-            return desc;
-        })
-        .then((desc)=> {
-            console.log(desc);
-            socket.emit('_offer', desc);
-            log()('emit _offer');
-        });
-};
-
-var createAnswer = function (desc) {
-    return setRemoteDescription(desc)
-        .then(()=> {
-            return pc.createAnswer();
-        })
-        .then((desc)=> {
-            log()('create answer');
-            return desc;
-        })
-        .then((desc)=> {
-            return pc.setLocalDescription(desc)
-                .then(()=> {
-                    return desc;
-                });
-        })
-        .then((desc)=> {
-            log()('set local description');
-            return desc;
-        })
-        .then((desc)=> {
-            log()(' emit _answer');
-            socket.emit('_answer', desc);
-        });
-};
-
-
-/**
- * 发送/接收文件相关
- * @param cb
- */
-function transferFiles(cb) {
-    return new Promise((res)=> {
-        var dc = pc.createDataChannel('dc');
-        // dc.binaryType = 'arraybuffer';
-
-        dataChannel = dc;
-
-        log()('data channel');
-        setInterval(()=> {
-            log()('status ' + dc.readyState);
-        }, 1000);
-
-        dc.onopen = function (evt) {
-            log()('on_openchannel');
-            console.log(evt, ioType, ' <<<<)))))))))))))((((((((((())))))))))');
-            // cb(datachannel);
-            dc.send('hi world' + ioType);
+class RTC {
+    constructor(type) {
+        this.type = type;
+        var servers = {
+            'iceServers': [{
+                'url': 'stun:stun.fwdnet.net'
+            }, {
+                'url': 'stun:stun.example.org'
+            }]
+        };
+        var pcConstraints = {
+            'optional': []
         };
 
-        dc.onerror = function (e) {
+        var pc = new window.RTCPeerConnection(servers, pcConstraints);
+        this.rtc = pc;
+    }
+
+    __init() {
+        this.rtc.onicecandidate = function (event) {
+            utils.log(utils.ioType)('on ice candidate');
+            if (event.candidate) {
+                socket.emit('_candidate', {type: this.type, candidate:event.candidate});
+                utils.log(utils.ioType)('emit _candidate');
+            }
+        };
+
+        this.rtc.onerror = function (e) {
             console.log(e, 'on_error');
         };
-
-        dc.onclose = function (evt) {
-            console.log(evt, 'on_close');
-        };
-        return res(dc);
-    });
-}
-
-function sendFile(filename) {
-    log()('send file');
-    socket.emit('_file', filename);
-}
-
-function _sendFile(dc) {
-    var file = file_input.files[0];
-    log()('status ', dc.readyState);
-    var chuncksize = 1024;
-    var filesize = file.size;
-    var offset = 0;
-
-    function send(e) {
-        dc.send(e.target.result);
     }
 
-    for (; ;) {
-        let reader = new FileReader();
-        reader.onload = send;
+    __init_media() {
+        var v_local = document.getElementById('c_video_local');
+        var v_remote = document.getElementById('c_video_remote');
 
-        let slice = file.slice(offset, offset + chuncksize);
-        reader.readAsArrayBuffer(slice);
-
-        offset = offset + chuncksize;
-        if (offset > filesize) break;
+        this.rtc.onaddstream = function (e) {
+            console.log(e);
+            utils.log(utils.ioType)('on add stream');
+            v_local.srcObject = stream;
+            v_remote.srcObject = e.stream;
+        };
     }
-}
 
-/**
- *  发送消息
- */
-function sendMsg() {
-    return new Promise((res, rej)=> {
-        var dc = pc.createDataChannel('msg');
+    __init_channel() {
+        this.rtc.ondatachannel = function (e) {
+            console.log(e);
+            var dc = e.channel;
+            utils.log(utils.ioType)('on_data_channel');
 
-        log()('msg channel');
+            dc.onmessage = function (evt) {
+                utils.log(utils.ioType)('on_msg');
+                console.log(evt);
+                // 文件相关
+            };
+            dc.onclose = function (evt) {
+                console.log(evt, 'on_close');
+            };
 
-        dc.onerror = function (e) {
-            console.log(e, 'on_error');
         };
+    }
 
-        dc.onclose = function (evt) {
-            console.log(evt, 'on_close');
+    __init_msg(socket) {
+        this.rtc.ondatachannel = function (e) {
+            console.log(e);
+            var dc = e.channel;
+            utils.log(utils.ioType)('on_data_channel');
+
+            document.querySelector('form#text-form input.sender').disabled = false;
+
+            dc.onclose = function (evt) {
+                console.log(evt, 'on_close');
+                document.querySelector('form#text-form input.sender').disabled = true;
+            };
+
+            dc.onmessage = function (evt) {
+                var msg = JSON.parse(evt.data);
+                var t = document.createTextNode('>> ' +msg.username + ': ' + msg.content);
+                var p = document.createElement('p');
+                p.appendChild(t);
+
+                document.querySelector('div#msg-list').appendChild(p);
+            };
+            return dc;
         };
+    }
 
-        // dc.send()
-        return res(dc);
-    })
+    setRemoteDescription(des) {
+        let desc = new RTCSessionDescription((des));
+
+        return this.rtc.setRemoteDescription(desc)
+            .then(()=> {
+                utils.log(utils.ioType)('set remote description');
+            });
+    }
+
+    createOffer() {
+        return this.rtc.createOffer()      // createOffer 过程
+            .then((desc)=> {
+                utils.log(utils.ioType)('create offer');
+                return desc;
+            })
+            .then(function (desc) {
+                return this.rtc.setLocalDescription(desc)
+                    .then(()=> {
+                        return desc;
+                    });
+            })
+            .then((desc)=> {
+                utils.log(utils.ioType)('set local description');
+                return desc;
+            })
+            .then((desc)=> {
+                console.log(desc);
+                socket.emit('_offer', {type: this.type, desc: desc});
+                utils.log(utils.ioType)('emit _offer');
+            });
+    }
+
+    createAnswer(desc) {
+        return setRemoteDescription(desc)
+            .then(()=> {
+                return this.rtc.createAnswer();
+            })
+            .then((desc)=> {
+                utils.log(utils.ioType)('create answer');
+                return desc;
+            })
+            .then((desc)=> {
+                return this.rtc.setLocalDescription(desc)
+                    .then(()=> {
+                        return desc;
+                    });
+            })
+            .then((desc)=> {
+                utils.log(utils.ioType)('set local description');
+                return desc;
+            })
+            .then((desc)=> {
+                utils.log(utils.ioType)(' emit _answer');
+                this.socket.emit('_answer', {type: this.type, desc: desc});
+            });
+    }
+
+    addCandidate(desc) {
+        var cand = new window.RTCIceCandidate(candidate);
+        pc.addIceCandidate(cand).then((d)=> {
+            utils.log(utils.ioType)('addIceCandidate');
+        })
+    }
+
+    destory() {
+
+    }
+
 }
