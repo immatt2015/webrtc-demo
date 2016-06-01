@@ -124,7 +124,6 @@ window.onload = function () {
     });
     socket.on('_accept', (user_id)=> {          // 发起方 处理接收方同意事件
         ioType = 'out';
-        console.log('==  _accept, ' + ioType);
         console.log(c_video.checked, c_audio.checked);
         return registerMedia(c_video.checked, c_audio.checked)
             .catch((e)=> {
@@ -322,6 +321,7 @@ window.onload = function () {
      * rtc相关方法
      */
     function addMediaStream(video, audio) {
+        console.log(video, audio);
         return navigator.mediaDevices.getUserMedia({
             audio: audio,
             video: video
@@ -333,33 +333,16 @@ window.onload = function () {
             });
     }
 
-    function addMedia() {
-        return new Promise((res, rej)=> {
-            try {
-                // var media = new mediaStream();
-                var media = null;
-                return res(media);
-            } catch (e) {
-                console.log(e);
-                return rej(e);
-            }
-        });
-    }
-
     function registerMedia(video, audio) {
         return Promise.resolve({})
             .then((m)=> {
-                m.media = addMediaStream({video: true, audio: true});
-                // m.media = addMedia();
-                return m;
+                return addMediaStream(video, audio);
             })
             .then((m)=> {
-                m.file = transferFiles();
-                return m;
+                // return transferFiles();
             })
             .then((m)=> {
-                m.msg = sendMsg();
-                return m;
+                // return sendMsg();
             });
     }
 
@@ -416,7 +399,7 @@ window.onload = function () {
                 return desc;
             })
             .then((desc)=> {
-                log()(' emit _answer');
+                log()('emit _answer');
                 socket.emit('_answer', desc);
             });
     };
