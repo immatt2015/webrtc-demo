@@ -15,7 +15,7 @@ var handle = function (socket) {
     rtc_ls[s_id] = [null, socket];
 
     socket.on('disconnect', function () {
-        rtc_ls[s_id][rtc_ls[rtc_ls[s_id][2]][1]]
+        if (rtc_ls[s_id][2]) rtc_ls[rtc_ls[s_id][2]][2] = null;
         delete rtc_ls[s_id];
         console.log('disconnect  >> ', s_id);
     });
@@ -35,7 +35,11 @@ var handle = function (socket) {
 
     socket.on('call_out', (data) => {
         console.log('_call_out');
-        if (rtc_ls[s_id][2])
+        if (data === s_id) return false;
+        if (rtc_ls[s_id][2]) {
+            rtc_ls[rtc_ls[s_id][2]][1].emit('pause');
+            // 去掉双方存储的信息， 终端要断开连接，， 收尾操纵。
+        }
         if (rtc_ls[data]) rtc_ls[data][1].emit('call_in', s_id); // 这里是有问题的
     });
 
@@ -68,9 +72,29 @@ var handle = function (socket) {
     });
 
     // 音视频连接 建立
+    socket.on('meida_start', () => {
+        console.log('meida_start');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('meida_start');
+    });
+    socket.on('media_accept', () => {
+        console.log('media_accept');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_accept');
+    });
+    socket.on('media_ready', () => {
+        console.log('media_media_readyaccept');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_ready');
+    });
+    socket.on('media_refused', () => {
+        console.log('media_refused');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_refused');
+    });
+    socket.on('media_paused', () => {
+        console.log('media_paused');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_paused');
+    });
     socket.on('meida_answer', (d) => {
-        console.log('media_answer');
-        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('meida_answer', d);
+        console.log('media_accept');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_accept', d);
     });
     socket.on('media_candidate', (d) => {
         console.log('msg_candidate ' + s_id + ' ' + JSON.stringify(d));
