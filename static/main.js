@@ -37,7 +37,7 @@ window.onload = function () {
 
 
     var socket = io();
-    var pc = new WebRTC();
+    var msg_pc = new WebRTC();
 
     socket.on('connect', () => {   // socket 连接建立, 连接按钮不可用
         c_video.disabled = false;
@@ -84,7 +84,7 @@ window.onload = function () {
         s_media.disabled = false;
         p_media.disabled = true;
 
-        return pc.createChannel('msg', null)
+        return msg_pc.createChannel('msg', null)
             .then((channel) => {
                 document.querySelector('form#text-form input.sender').onclick = function (e) {
                     var content = document.querySelector('form#text-form input.form-input').value;
@@ -109,7 +109,7 @@ window.onload = function () {
         socket.emit('accept', user_id);
         log()('accpet');
 
-        return pc.createChannel('msg', null)
+        return msg_pc.createChannel('msg', null)
             .then((channel) => {
                 document.querySelector('form#text-form input.sender').onclick = function (e) {
                     var content = document.querySelector('form#text-form input.form-input').value;
@@ -122,9 +122,10 @@ window.onload = function () {
                     document.querySelector('div#msg-list').appendChild(p);
                 };
 
-                return pc.createOffer((desc) => {
-                    socket.emit('msg_offer', desc);
-                });
+                return msg_pc.createOffer();
+            })
+            .then((desc) => {
+                socket.emit('msg_offer', desc);
             })
             .catch((e) => {
                 console.log(e);
@@ -136,9 +137,11 @@ window.onload = function () {
         // 处理已存在的连接，， 去掉关联, 在peer 中也要进行处理
     });
 
+
+
     // 消息连接建立
     socket.on('msg_candidate', (candidate) => {       // 双方 处理candidate候选信息
-        pc.addIceCandidate(candidate).then((d) => {
+        msg_pc.addIceCandidate(candidate).then((d) => {
             log()('addIceCandidate');
         }).catch((e) => {
             console.log(e);
@@ -148,7 +151,7 @@ window.onload = function () {
         log()('msg_offer', desc);
         if (!desc) return false;
 
-        return pc.createAnswer(desc)
+        return msg_pc.createAnswer(desc)
             .then((desc) => {
                 socket.emit('msg_answer', desc);
             })
@@ -157,7 +160,7 @@ window.onload = function () {
             });
     });
     socket.on('msg_answer', (desc) => {              // 发起方 处理接收方接受offer后的answer事件
-        pc.setRemoteDescription(desc)
+        msg_pc.setRemoteDescription(desc)
             .then(() => {
                 log()('set remote description');
             }).catch((e) => {
@@ -165,7 +168,21 @@ window.onload = function () {
             });
     });
 
+    // RTC 事件注册
+    msg_pc.regIceCandidate((candidate) => {
+        socket.emit('msg_candidate', candidate);
+    });
+    msg_pc.regDataChannel((evt) => {
+        if (typeof evt.data === 'string') {
+            // console.log(evt.data);
+            var msg = JSON.parse(evt.data);
+            var t = document.createTextNode('>> ' + msg.username + ': ' + msg.content);
+            var p = document.createElement('p');
+            p.appendChild(t);
 
+            document.querySelector('div#msg-list').appendChild(p);
+        }
+    });
 
 
 
@@ -211,6 +228,22 @@ window.onload = function () {
     // 音视频连接建立
     var media_pc_in = null;
     var media_pc_out = null;
+    
+    var media_pc = new WebRTC();
+
+    media_pc.regStream((e) => {
+        log()('on add stream');
+        console.log('on_add_stream')
+        v_remote.srcObject = e.stream;
+    });
+
+    media_pc.regIceCandidate((candidate) => {
+        console.log('on_ice_candidate')
+        socket.emit('media_candidate', candidate);
+    });
+    
+    media_pc_in = media_pc_out =  media_pc;
+
     s_media.onclick = function (evt) {     // 发起者发起音视频聊天
         if (!c_video.checked && !c_audio.checked) {
             alert('音频\视频 至少选择一项');
@@ -219,55 +252,21 @@ window.onload = function () {
 
         ioType = 'out';
 
-        socket.emit('meida_start');
+        socket.emit('media_start');
     };
-    socket.on('meida_start', () => {     // 接受者 接受请求， 并且创建媒体流
+    socket.on('media_start', () => {     // 接受者 接受请求， 并且创建媒体流
         if (!confirm('接受视频请求')) {
             socket.emit('media_refused');
         }
-
+        
         ioType = 'in';
-        log()('meida_start');
 
-        // start offer
-        media_pc_in = new WebRTC();
+        socket.emit('media_accept');
 
-        media_pc_in.regStream((e) => {
-            log()('on add stream');
-            console.log(e);
-            console.log(v_remote);
-            v_remote.srcObject = e.stream;
-        });
-
-        media_pc_in.regIceCandidate((candidate) => {
-            socket.emit('meida_candidate', candidate);
-        });
-
-        utils.getMediaStream(c_video.checked, c_audio.checked, media_pc_in)
-            .then((localStream) => {
-                // v_local.srcObject = localStream;
-                socket.emit('media_accept');
-            })
-            .catch((e) => {
-                console.log(e);
-            });
     });
+
+    
     socket.on('media_accept', () => {       // 发起者 建立媒体流， 并回应接受者媒体准备就绪的响应
-        log()('media_accept');
-
-        media_pc_out = new WebRTC();
-
-        media_pc_out.regStream((e) => {
-            log()('on add stream');
-            console.log(e);
-            console.log(v_remote);
-            v_remote.srcObject = e.stream;
-        });
-
-        media_pc_out.regIceCandidate((candidate) => {
-            socket.emit('meida_candidate', candidate);
-        });
-
         utils.getMediaStream(c_video.checked, c_audio.checked, media_pc_out)
             .then((localStream) => {
                 // v_local.srcObject = localStream;
@@ -281,23 +280,34 @@ window.onload = function () {
         alert('对方拒绝音视频');
     });
     socket.on('media_ready', () => {    // 接受者开始创建offer
-        return media_pc_in.createOffer((desc) => {
-            socket.emit('media_offer', desc);
-        });
+        utils.getMediaStream(c_video.checked, c_audio.checked, media_pc_in)
+            .then((localStream) => {
+                v_local.srcObject = localStream;
+                return media_pc_in.createOffer();
+            })
+            .then((desc) => {
+                log()('media_offer');
+                socket.emit('media_offer', desc);
+            })
+            .catch((e) => {
+                console.log(e);
+            });
+
     });
     socket.on('media_paused', () => {
         // end answer
         // end media
     });
-    socket.on('meida_candidate', (candidate) => {       // 双方 处理candidate候选信息
-        (media_pc_out || media_pc_in).addIceCandidate(candidate).then((d) => {
-            log()('addIceCandidate');
-        }).catch((e) => {
-            console.log(e);
-        });
+    socket.on('media_candidate', (candidate) => {       // 双方 处理candidate候选信息
+        (media_pc_out || media_pc_in).addIceCandidate(candidate)
+            .then((d) => {
+                log()('addIceCandidate');
+            }).catch((e) => {
+                console.log(e);
+            });
     });
     socket.on('media_offer', (desc) => {             // 接收方 处理处理发起方提交offer事件
-        log()('media_offer');
+        log()('media_offer', desc);
         if (!desc) return false;
 
         return media_pc_out.createAnswer(desc)
@@ -319,55 +329,9 @@ window.onload = function () {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // 文件传输
 
-    // RTC 事件注册
-    pc.regIceCandidate((candidate) => {
-        socket.emit('msg_candidate', candidate);
-    });
-    pc.regDataChannel((evt) => {
-        if (typeof evt.data === 'string') {
-            console.log(evt.data);
-            var msg = JSON.parse(evt.data);
-            var t = document.createTextNode('>> ' + msg.username + ': ' + msg.content);
-            var p = document.createElement('p');
-            p.appendChild(t);
 
-            document.querySelector('div#msg-list').appendChild(p);
-        }
-    });
 
 
 
@@ -404,6 +368,7 @@ class WebRTC {
     }
 
     regIceCandidate(cb) {
+        console.log('reg candidate callback');
         this.pc.onicecandidate = function (event) {
             log()('on ice candidate');
             if (event.candidate) {
@@ -444,10 +409,6 @@ class WebRTC {
             .then((desc) => {
                 log()('set local description');
                 return desc;
-            })
-            .then((desc) => {
-                cb(desc);
-                log()('emit _offer');
             });
     };
 
@@ -542,6 +503,7 @@ function log() {
     if ('in' === ioType) symbols = '>> ';
     if ('out' === ioType) symbols = '<< ';
 
-    return console.log.bind(console, ioType, symbols);
+    // return console.log.bind(console, ioType, symbols);
+    return function () {};
 }
 

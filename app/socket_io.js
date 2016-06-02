@@ -17,7 +17,6 @@ var handle = function (socket) {
     socket.on('disconnect', function () {
         if (rtc_ls[s_id][2]) rtc_ls[rtc_ls[s_id][2]][2] = null;
         delete rtc_ls[s_id];
-        console.log('disconnect  >> ', s_id);
     });
 
     socket.on('join', (data) => {
@@ -28,13 +27,11 @@ var handle = function (socket) {
         for (let i = 0, l = ls.length; i < l; i++) {
             name_ls.push([ls[i], rtc_ls[ls[i]][0]]);
         }
-        console.log('>>', name_ls);
         socket.broadcast.emit('list', name_ls);
         socket.emit('list', name_ls);
     });
 
     socket.on('call_out', (data) => {
-        console.log('_call_out');
         if (data === s_id) return false;
         if (rtc_ls[s_id][2]) {
             rtc_ls[rtc_ls[s_id][2]][1].emit('pause');
@@ -48,7 +45,6 @@ var handle = function (socket) {
     });
 
     socket.on('accept', (data) => {
-        console.log('accept');
         if (rtc_ls[data]) {
             rtc_ls[data][1].emit('accept', s_id);
             rtc_ls[s_id][2] = rtc_ls[data][1].id;
@@ -62,26 +58,26 @@ var handle = function (socket) {
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('msg_answer', d);
     });
     socket.on('msg_candidate', (d) => {
-        console.log('msg_candidate ' + s_id + ' ' + JSON.stringify(d));
+        console.log('msg_candidate ' + s_id );
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('msg_candidate', d);
     });
 
     socket.on('msg_offer', (d) => {
-        console.log('msg_offer', d);
+        console.log('msg_offer');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('msg_offer', d);
     });
 
     // 音视频连接 建立
-    socket.on('meida_start', () => {
-        console.log('meida_start');
-        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('meida_start');
+    socket.on('media_start', () => {
+        console.log('media_start');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_start');
     });
     socket.on('media_accept', () => {
         console.log('media_accept');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_accept');
     });
     socket.on('media_ready', () => {
-        console.log('media_media_readyaccept');
+        console.log('media_ready');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_ready');
     });
     socket.on('media_refused', () => {
@@ -92,17 +88,17 @@ var handle = function (socket) {
         console.log('media_paused');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_paused');
     });
-    socket.on('meida_answer', (d) => {
-        console.log('media_accept');
-        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_accept', d);
+    socket.on('media_answer', (d) => {
+        console.log('media_answer');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_answer', d);
     });
     socket.on('media_candidate', (d) => {
-        console.log('msg_candidate ' + s_id + ' ' + JSON.stringify(d));
+        console.log('media_candidate ' + s_id);
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_candidate', d);
     });
 
     socket.on('media_offer', (d) => {
-        console.log('msg_offer', d);
+        console.log('media_offer');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_offer', d);
     });
 
