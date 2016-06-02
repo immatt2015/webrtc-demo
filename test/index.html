@@ -169,41 +169,41 @@
         };
 
 
-        // >>>>>>>>>>    传输文件 <<<<<<<<<<<<<
-        let data_ended = true;
-        let dc1 = null;
-        let dc2 = null;
-        dc1 = pc1.createDataChannel('file');
-        dc2 = pc2.createDataChannel('file');
+        // // >>>>>>>>>>    传输文件 <<<<<<<<<<<<<
+        // let data_ended = true;
+        // let dc1 = null;
+        // let dc2 = null;
+        // dc1 = pc1.createDataChannel('file');
+        // dc2 = pc2.createDataChannel('file');
 
-        dc1.binaryType = 'arraybuffer';
-        dc2.binaryType = 'arraybuffer';
+        // dc1.binaryType = 'arraybuffer';
+        // dc2.binaryType = 'arraybuffer';
 
-        document.getElementById('s_start').onclick = function(){
-            if (!data_ended) return false;
-            let file = document.getElementById('file');
-            console.log(file.files[0], 1);
-            dc1.onopen = function (){
-                alert('open');
-                let f_reader = new window.FileReader();
-                f_reader.onload = function (e){
-                    dc1.send(e.target.result);
-                    console.log(e.target.result);
-                };
-                f_reader.readAsArrayBuffer(file.files[0].slice(0));
-            }
-        };
+        // document.getElementById('s_start').onclick = function(){
+        //     if (!data_ended) return false;
+        //     let file = document.getElementById('file');
+        //     console.log(file.files[0], 1);
+        //     dc1.onopen = function (){
+        //         alert('open');
+        //         let f_reader = new window.FileReader();
+        //         f_reader.onload = function (e){
+        //             dc1.send(e.target.result);
+        //             console.log(e.target.result);
+        //         };
+        //         f_reader.readAsArrayBuffer(file.files[0].slice(0));
+        //     }
+        // };
 
-        dc2.onmessage = function(e){
-            console.log(e, 1);
-        }
+        // dc2.onmessage = function(e){
+        //     console.log(e, 1);
+        // }
 
-        document.getElementById('s_stop').onclick = function (){
-            data_ended = true;
-            if(data_ended) return false;
+        // document.getElementById('s_stop').onclick = function (){
+        //     data_ended = true;
+        //     if(data_ended) return false;
 
-            if(dc) dc1.close();
-        };
+        //     if(dc) dc1.close();
+        // };
 
     }()
 
