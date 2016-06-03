@@ -11,6 +11,7 @@ var pcConstraints = {
     'optional': []
 };
 var ioType = undefined;   //发起角色 in 被发起者, out 发起者
+var _filename = null;
 
 window.onload = function () {
     var username = undefined;
@@ -326,13 +327,18 @@ window.onload = function () {
     var file_pc = new WebRTC();
 
     file_pc.regDataChannel((e) => {
-        log()('on datachannel');
-        console.log('on_datachannel')
-        console.log(e);
-        console.log('receive hi');
         // 下载文件的逻辑
-        utils.receiveFile(e);
+        return utils.receiveFile(e)
+            .then(() => {
+                e.currentTarget.close();
+                utils.cleanDownload();
+            })
+            .catch((e) => {
+                console.log(e);
+            });
 
+    }, () => {
+        utils.transferFile();
     });
 
     file_pc.regIceCandidate((candidate) => {
@@ -341,6 +347,7 @@ window.onload = function () {
     });
 
     b_file.onclick = function (evt) {     // 发起者发起音视频聊天
+        utils.cleanDownload();
         var file = i_file.files[0];
         if (!file) {
             alert('文件不能为空');
@@ -350,11 +357,15 @@ window.onload = function () {
         console.log('file start');
     };
     socket.on('file_start', (file_name) => {     // 接受者  创建接受通道
+        _filename = null;
         if (!confirm('对方发送一个<' + file_name + '>文件,是否接收?')) {
             socket.emit('file_refused');
             return false;
         }
 
+        _filename = file_name;
+        utils.cleanDownload();
+        console.log(file_name);
         ioType = 'in';
         console.log('file accepts');
 
@@ -380,17 +391,15 @@ window.onload = function () {
         return file_pc.createChannel('file', 'arraybuffer')
             .then((channel) => {
                 // 发送文件
-                socket.emit('')
                 channel.onopen = function () {
-                    channel.send('hi');
-                    console.log('send hi');
                     return utils.sendFile(i_file.files[0], channel)
-                    .then(()=>{
-                        alert('done');
-                    })
-                    .catch((e)=>{
-                        console.log(e);
-                    })
+                        .then(() => {
+                            alert('done');
+                            channel.close();
+                        })
+                        .catch((e) => {
+                            console.log(e);
+                        });
                 };
             })
             .catch((e) => {
@@ -474,7 +483,7 @@ class WebRTC {
         this.pc.onaddstream = cb;
     }
 
-    regDataChannel(cb) {
+    regDataChannel(cb, close) {
         this.pc.ondatachannel = function (e) {
             console.log(e);
             var dc = e.channel;
@@ -490,6 +499,7 @@ class WebRTC {
 
             dc.onclose = function (evt) {
                 console.log(evt, 'on_close');
+                return close();
             };
         };
     }
@@ -584,6 +594,8 @@ class WebRTC {
     }
 };
 
+var receiveBuffer = [];
+var receivedSize = 0;
 var utils = {
     getMediaStream(video, audio, rtc) {
         return navigator.mediaDevices.getUserMedia({
@@ -601,7 +613,7 @@ var utils = {
         return Promise.resolve()
             .then(() => {
                 log()('status ', channel.readyState);
-                var chuncksize = 1024;
+                // var chuncksize = 1024;
                 var filesize = file.size;
                 var offset = 0;
 
@@ -609,24 +621,42 @@ var utils = {
                     channel.send(e.target.result);
                 }
 
-                for (; ;) {
-                    let reader = new FileReader();
-                    reader.onload = send;
+                let reader = new FileReader();
+                reader.onload = send;
 
-                    let slice = file.slice(offset, offset + chuncksize);
-                    reader.readAsArrayBuffer(slice);
-
-                    offset = offset + chuncksize;
-                    if (offset > filesize) break;
-                }
+                let slice = file.slice(offset, filesize);
+                reader.readAsArrayBuffer(slice);
             });
     },
 
-    receiveFile(e) {
-        console.log('receive', e);
-        return false;
-    }
+    receiveFile(event) {
+        return new Promise((res, rej) => {
+            console.log(event);
+            receiveBuffer.push(event.data);
+            console.log(receivedSize)
+            receivedSize += event.data.byteLength;
+            console.log(event.data.byteLength, receivedSize);
+        });
+    },
 
+    transferFile() {
+        var received = new window.Blob(receiveBuffer);
+        console.log(_filename)
+        var downloadAnchor = document.createElement('a');
+        downloadAnchor.href = URL.createObjectURL(received);
+        downloadAnchor.download = _filename;
+        downloadAnchor.textContent = _filename;
+        downloadAnchor.style.display = 'block';
+
+        document.getElementById('download').appendChild(downloadAnchor);
+        this.cleanDownload();
+
+    },
+
+    cleanDownload() {
+        receiveBuffer = [];
+        receivedSize = 0;
+    }
 };
 
 function log() {
@@ -637,4 +667,3 @@ function log() {
     // return console.log.bind(console, ioType, symbols);
     return function () { };
 }
-
