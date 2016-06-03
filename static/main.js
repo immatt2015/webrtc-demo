@@ -16,7 +16,7 @@ var _filename = null;
 window.onload = function () {
     var username = undefined;
     do {
-        username = (new Date() / 1000).toString() //|| prompt('输入昵称');
+        username = prompt('输入昵称');
     } while (username !== null && username.trim().length < 1);
     if (!username) {
         alert('取消通信');
