@@ -328,15 +328,17 @@ window.onload = function () {
     file_pc.regDataChannel((e) => {
         log()('on datachannel');
         console.log('on_datachannel')
-        cosnole.log(e);
+        console.log(e);
+        console.log('receive hi');
+        // 下载文件的逻辑
+        utils.receiveFile(e);
+
     });
 
     file_pc.regIceCandidate((candidate) => {
         console.log('on_ice_candidate');
         socket.emit('file_candidate', candidate);
     });
-
-
 
     b_file.onclick = function (evt) {     // 发起者发起音视频聊天
         var file = i_file.files[0];
@@ -345,24 +347,27 @@ window.onload = function () {
             return false;
         }
         socket.emit('file_start', file.name);
+        console.log('file start');
     };
-    socket.on('file_start', (file_name) => {     // 接受者 接受请求， 并且创建媒体流
+    socket.on('file_start', (file_name) => {     // 接受者  创建接受通道
         if (!confirm('对方发送一个<' + file_name + '>文件,是否接收?')) {
             socket.emit('file_refused');
+            return false;
         }
 
         ioType = 'in';
+        console.log('file accepts');
 
-        socket.emit('file_accept');
-        //  添加接收文件的动作。。
-
-        return file_pc.createChannel('file', null)
+        return file_pc.createChannel('file', 'arraybuffer')
             .then((channel) => {
-                channel.onopen = function () {
-                    channel.onmessage = function (data) {
-                        console.log(data);
-                    };
-                };
+                console.log('create channel');
+
+                socket.emit('file_accept');
+
+                return file_pc.createOffer();
+            })
+            .then((desc) => {
+                socket.emit('file_offer', desc);
             })
             .catch((e) => {
                 console.log(e);
@@ -370,11 +375,23 @@ window.onload = function () {
     });
 
 
-    socket.on('file_accept', () => {       //  发送文件
-        return file_pc.createChannel('file', null)
+    socket.on('file_accept', () => {       //  发送文件  创建发送通道... 进行发送文件即可
+        console.log('file accepted');
+        return file_pc.createChannel('file', 'arraybuffer')
             .then((channel) => {
                 // 发送文件
-                channel.send('hi');
+                socket.emit('')
+                channel.onopen = function () {
+                    channel.send('hi');
+                    console.log('send hi');
+                    return utils.sendFile(i_file.files[0], channel)
+                    .then(()=>{
+                        alert('done');
+                    })
+                    .catch((e)=>{
+                        console.log(e);
+                    })
+                };
             })
             .catch((e) => {
                 console.log(e);
@@ -581,28 +598,32 @@ var utils = {
     },
 
     sendFile(file, channel) {
-        log()('status ', dc.readyState);
-        var chuncksize = 1024;
-        var filesize = file.size;
-        var offset = 0;
+        return Promise.resolve()
+            .then(() => {
+                log()('status ', channel.readyState);
+                var chuncksize = 1024;
+                var filesize = file.size;
+                var offset = 0;
 
-        function send(e) {
-            channel.send(e.target.result);
-        }
+                function send(e) {
+                    channel.send(e.target.result);
+                }
 
-        for (; ;) {
-            let reader = new FileReader();
-            reader.onload = send;
+                for (; ;) {
+                    let reader = new FileReader();
+                    reader.onload = send;
 
-            let slice = file.slice(offset, offset + chuncksize);
-            reader.readAsArrayBuffer(slice);
+                    let slice = file.slice(offset, offset + chuncksize);
+                    reader.readAsArrayBuffer(slice);
 
-            offset = offset + chuncksize;
-            if (offset > filesize) break;
-        }
+                    offset = offset + chuncksize;
+                    if (offset > filesize) break;
+                }
+            });
     },
 
-    receiveFile() {
+    receiveFile(e) {
+        console.log('receive', e);
         return false;
     }
 

@@ -54,65 +54,55 @@ var handle = function (socket) {
 
     // 消息连接 建立
     socket.on('msg_answer', (d) => {
-        console.log('msg_answer');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('msg_answer', d);
     });
     socket.on('msg_candidate', (d) => {
-        console.log('msg_candidate ' + s_id);
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('msg_candidate', d);
     });
 
     socket.on('msg_offer', (d) => {
-        console.log('msg_offer');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('msg_offer', d);
     });
 
     // 音视频连接 建立
     socket.on('media_start', () => {
-        console.log('media_start');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_start');
     });
     socket.on('media_accept', () => {
-        console.log('media_accept');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_accept');
     });
     socket.on('media_ready', () => {
-        console.log('media_ready');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_ready');
     });
     socket.on('media_refused', () => {
-        console.log('media_refused');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_refused');
     });
     socket.on('media_paused', () => {
-        console.log('media_paused');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_paused');
     });
     socket.on('media_answer', (d) => {
-        console.log('media_answer');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_answer', d);
     });
     socket.on('media_candidate', (d) => {
-        console.log('media_candidate ' + s_id);
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_candidate', d);
     });
 
     socket.on('media_offer', (d) => {
-        console.log('media_offer');
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('media_offer', d);
     });
+
 
     // 文件连接 建立
     socket.on('file_start', (filename) => {
         console.log('file_start', filename);
-        rtc_ls[rtc_ls[s_id][2]][1].emit('file_start', filename);
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('file_start', filename);
     });
     socket.on('file_refused', () => {
-        rtc_ls[rtc_ls[s_id][2]][1].emit('file_refused');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('file_refused');
     });
     socket.on('file_accept', () => {
         console.log('file_accept file');
-        rtc_ls[rtc_ls[s_id][2]][1].emit('file_accept');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('file_accept');
     });
 
     socket.on('file_answer', (d) => {
