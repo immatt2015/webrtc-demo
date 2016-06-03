@@ -29,6 +29,8 @@ window.onload = function () {
     var c_audio = document.getElementById('s-audio');
     var p_media = document.getElementById('stop-media');
     var s_media = document.getElementById('start-media');
+    var i_file = document.getElementById('file');
+    var b_file = document.querySelector('form#file-form .sender');
 
     function callOut(evt) {
         socket.emit('call_out', evt.target.id);
@@ -86,16 +88,21 @@ window.onload = function () {
 
         return msg_pc.createChannel('msg', null)
             .then((channel) => {
-                document.querySelector('form#text-form input.sender').onclick = function (e) {
-                    var content = document.querySelector('form#text-form input.form-input').value;
-                    var msg = { username: username, content: content };
-                    channel.send(JSON.stringify(msg));
-                    var t = document.createTextNode('<< 自己 : ' + msg.content);
-                    var p = document.createElement('p');
-                    p.appendChild(t);
+                channel.onopen = function () {
+                    document.querySelector('form#text-form input.sender').onclick = function (e) {
+                        var content = document.querySelector('form#text-form input.form-input').value;
+                        var msg = { username: username, content: content };
+                        channel.send(JSON.stringify(msg));
+                        var t = document.createTextNode('<< 自己 : ' + msg.content);
+                        var p = document.createElement('p');
+                        p.appendChild(t);
 
-                    document.querySelector('div#msg-list').appendChild(p);
-                };
+                        document.querySelector('div#msg-list').appendChild(p);
+                    };
+                }
+            })
+            .catch((e) => {
+                console.log(e);
             });
     });
 
@@ -185,50 +192,10 @@ window.onload = function () {
     });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // 音视频连接建立
     var media_pc_in = null;
     var media_pc_out = null;
-    
+
     var media_pc = new WebRTC();
 
     media_pc.regStream((e) => {
@@ -241,8 +208,8 @@ window.onload = function () {
         console.log('on_ice_candidate')
         socket.emit('media_candidate', candidate);
     });
-    
-    media_pc_in = media_pc_out =  media_pc;
+
+    media_pc_in = media_pc_out = media_pc;
 
     s_media.onclick = function (evt) {     // 发起者发起音视频聊天
         if (!c_video.checked && !c_audio.checked) {
@@ -258,18 +225,18 @@ window.onload = function () {
         if (!confirm('接受视频请求')) {
             socket.emit('media_refused');
         }
-        
+
         ioType = 'in';
 
         socket.emit('media_accept');
 
     });
 
-    
+
     socket.on('media_accept', () => {       // 发起者 建立媒体流， 并回应接受者媒体准备就绪的响应
         utils.getMediaStream(c_video.checked, c_audio.checked, media_pc_out)
             .then((localStream) => {
-                // v_local.srcObject = localStream;
+                v_local.srcObject = localStream;
                 socket.emit('media_ready');
             })
             .catch((e) => {
@@ -329,7 +296,150 @@ window.onload = function () {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // 文件传输
+    var file_pc = new WebRTC();
+
+    file_pc.regDataChannel((e) => {
+        log()('on datachannel');
+        console.log('on_datachannel')
+        cosnole.log(e);
+    });
+
+    file_pc.regIceCandidate((candidate) => {
+        console.log('on_ice_candidate');
+        socket.emit('file_candidate', candidate);
+    });
+
+
+
+    b_file.onclick = function (evt) {     // 发起者发起音视频聊天
+        var file = i_file.files[0];
+        if (!file) {
+            alert('文件不能为空');
+            return false;
+        }
+        socket.emit('file_start', file.name);
+    };
+    socket.on('file_start', (file_name) => {     // 接受者 接受请求， 并且创建媒体流
+        if (!confirm('对方发送一个<' + file_name + '>文件,是否接收?')) {
+            socket.emit('file_refused');
+        }
+
+        ioType = 'in';
+
+        socket.emit('file_accept');
+        //  添加接收文件的动作。。
+
+        return file_pc.createChannel('file', null)
+            .then((channel) => {
+                channel.onopen = function () {
+                    channel.onmessage = function (data) {
+                        console.log(data);
+                    };
+                };
+            })
+            .catch((e) => {
+                console.log(e);
+            });
+    });
+
+
+    socket.on('file_accept', () => {       //  发送文件
+        return file_pc.createChannel('file', null)
+            .then((channel) => {
+                // 发送文件
+                channel.send('hi');
+            })
+            .catch((e) => {
+                console.log(e);
+            })
+    });
+    socket.on('file_refused', () => {
+        alert('对方拒绝接收文件');
+    });
+
+
+    socket.on('file_candidate', (candidate) => {       // 双方 处理candidate候选信息
+        file_pc.addIceCandidate(candidate)
+            .then((d) => {
+                log()('addIceCandidate');
+            }).catch((e) => {
+                console.log(e);
+            });
+    });
+    socket.on('file_offer', (desc) => {             // 接收方 处理处理发起方提交offer事件
+        log()('file_offer', desc);
+        if (!desc) return false;
+
+        return file_pc.createAnswer(desc)
+            .then((desc) => {
+                socket.emit('file_answer', desc);
+            })
+            .catch(function (e) {
+                console.log(e);
+            });
+    });
+    socket.on('file_answer', (desc) => {              // 发起方 处理接收方接受offer后的answer事件
+        file_pc.setRemoteDescription(desc)
+            .then(() => {
+                log()('set remote description');
+            }).catch((e) => {
+                console.log(e);
+            });
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -441,10 +551,6 @@ class WebRTC {
 
             log()('data channel');
 
-            dc.onopen = function (evt) {
-                log()('on_openchannel');
-            };
-
             dc.onerror = function (e) {
                 console.log(e, 'on_error');
             };
@@ -494,6 +600,10 @@ var utils = {
             offset = offset + chuncksize;
             if (offset > filesize) break;
         }
+    },
+
+    receiveFile() {
+        return false;
     }
 
 };
@@ -504,6 +614,6 @@ function log() {
     if ('out' === ioType) symbols = '<< ';
 
     // return console.log.bind(console, ioType, symbols);
-    return function () {};
+    return function () { };
 }
 

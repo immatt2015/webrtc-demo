@@ -58,7 +58,7 @@ var handle = function (socket) {
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('msg_answer', d);
     });
     socket.on('msg_candidate', (d) => {
-        console.log('msg_candidate ' + s_id );
+        console.log('msg_candidate ' + s_id);
         if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('msg_candidate', d);
     });
 
@@ -103,17 +103,31 @@ var handle = function (socket) {
     });
 
     // 文件连接 建立
-    // socket.on('_file', (filename) => {
-    //     console.log('filename', filename);
-    //     rtc_ls[rtc_ls[s_id][2]][1].emit('_file', filename);
-    // });
-    // socket.on('_refused_file', () => {
-    //     rtc_ls[rtc_ls[s_id][2]][1].emit('_refused_file');
-    // });
-    // socket.on('_accept_file', () => {
-    //     console.log('accept file');
-    //     rtc_ls[rtc_ls[s_id][2]][1].emit('_accept_file');
-    // });
+    socket.on('file_start', (filename) => {
+        console.log('file_start', filename);
+        rtc_ls[rtc_ls[s_id][2]][1].emit('file_start', filename);
+    });
+    socket.on('file_refused', () => {
+        rtc_ls[rtc_ls[s_id][2]][1].emit('file_refused');
+    });
+    socket.on('file_accept', () => {
+        console.log('file_accept file');
+        rtc_ls[rtc_ls[s_id][2]][1].emit('file_accept');
+    });
+
+    socket.on('file_answer', (d) => {
+        console.log('file_answer');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('file_answer', d);
+    });
+    socket.on('file_candidate', (d) => {
+        console.log('file_candidate ' + s_id);
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('file_candidate', d);
+    });
+
+    socket.on('file_offer', (d) => {
+        console.log('file_offer');
+        if (rtc_ls[rtc_ls[s_id][2]]) rtc_ls[rtc_ls[s_id][2]][1].emit('file_offer', d);
+    });
 };
 
 exports.use = socketIO;
